@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Generated\mono-jay\skeleton.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Generated\mono-jay\skeleton.cs" />
+  </ItemGroup>
+
+</Project>

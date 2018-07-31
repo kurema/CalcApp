@@ -1,0 +1,85 @@
+%{
+using System;
+using kurema.Calc.Helper.Expressions;
+using kurema.Calc.Helper.Values;
+
+namespace kurema.Calc.Helper.Interpreter
+{
+    public class Parser
+    {
+        private int yacc_verbose_flag = 0;
+
+%}
+
+%token <string> LP
+%token <string> RP
+%token <string> OP_ADD
+%token <string> OP_SUB
+%token <string> OP_MUL
+%token <string> OP_DIV
+%token <string> NUM
+
+%type <IExpression> Formula
+%type <IExpression> Term
+%type <IExpression> Num
+
+%left LP RP
+%left OP_ADD OP_SUB
+%left OP_MUL OP_DIV
+
+%start Sentence
+
+%%
+
+Sentence
+  : Formula
+
+Formula
+  : Term
+  {
+    $$ = $1;
+  }
+  | OP_ADD Term
+  {
+    $$ = $2;
+  }
+  | OP_SUB Term
+  {
+    $$ = new OpSubExpression( new NumberExpression(new NumberDecimal(0)), $2);
+  }
+  | Formula OP_ADD Term
+  {
+    $$ = new OpAddExpression($1, $3);
+  }
+  | Formula OP_SUB Term
+  {
+    $$ = new OpSubExpression($1, $3);
+  }
+
+Term
+  : Num
+  {
+    $$ = $1;
+  }
+  | Term OP_MUL Num
+  {
+    $$ = new OpMulExpression($1, $3);
+  }
+  | Term OP_DIV Num
+  {
+    $$ = new OpDivExpression($1, $3);
+  }
+
+Num
+  : NUM
+  {
+    $$ = new NumberExpression(new NumberDecimal($1));
+  }
+  | LP Formula RP
+  {
+    $$ = $2;
+  }
+
+
+%%
+}
