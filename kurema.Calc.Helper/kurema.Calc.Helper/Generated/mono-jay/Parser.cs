@@ -49,7 +49,7 @@ namespace kurema.Calc.Helper.Interpreter
     */
 //t  internal yydebug.yyDebug debug;
 
-  protected const int yyFinal = 5;
+  protected const int yyFinal = 6;
 //t // Put this array into a separate class so it is only initialized if debugging is actually used
 //t // Use MarshalByRefObject to disable inlining
 //t class YYRules : MarshalByRefObject {
@@ -59,12 +59,15 @@ namespace kurema.Calc.Helper.Interpreter
 //t    "Formula : Term",
 //t    "Formula : OP_ADD Term",
 //t    "Formula : OP_SUB Term",
+//t    "Formula : Formula COMMA Term",
 //t    "Formula : Formula OP_ADD Term",
 //t    "Formula : Formula OP_SUB Term",
 //t    "Term : Num",
 //t    "Term : Term OP_MUL Num",
+//t    "Term : Term Num",
 //t    "Term : Term OP_DIV Num",
 //t    "Num : NUM",
+//t    "Num : KEYWORD LP Formula RP",
 //t    "Num : LP Formula RP",
 //t  };
 //t public static string getRule (int index) {
@@ -91,7 +94,7 @@ namespace kurema.Calc.Helper.Interpreter
     null,null,null,null,null,null,null,null,null,null,null,null,null,null,
     null,null,null,null,null,null,null,null,null,null,null,null,null,null,
     null,null,null,null,null,null,null,"LP","RP","OP_ADD","OP_SUB",
-    "OP_MUL","OP_DIV","NUM",
+    "OP_MUL","OP_DIV","NUM","KEYWORD","COMMA",
   };
 
   /** index-checked interface to yyNames[].
@@ -281,61 +284,79 @@ namespace kurema.Calc.Helper.Interpreter
         yyVal = yyV > yyTop ? null : yyVals[yyV]; // yyVal = yyDefault(yyV > yyTop ? null : yyVals[yyV]);
         switch (yyN) {
 case 2:
-#line 41 "Parser.jay"
+#line 43 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 3:
-#line 45 "Parser.jay"
+#line 47 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 4:
-#line 49 "Parser.jay"
+#line 51 "Parser.jay"
   {
     yyVal = new OpSubExpression( new NumberExpression(new NumberDecimal(0)), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 5:
-#line 53 "Parser.jay"
+#line 55 "Parser.jay"
   {
-    yyVal = new OpAddExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
+    yyVal = new ArgumentExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 6:
-#line 57 "Parser.jay"
+#line 59 "Parser.jay"
   {
-    yyVal = new OpSubExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
+    yyVal = new OpAddExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 7:
 #line 63 "Parser.jay"
   {
-    yyVal = ((IExpression)yyVals[0+yyTop]);
+    yyVal = new OpSubExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 8:
-#line 67 "Parser.jay"
+#line 69 "Parser.jay"
   {
-    yyVal = new OpMulExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
+    yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 9:
-#line 71 "Parser.jay"
+#line 73 "Parser.jay"
   {
-    yyVal = new OpDivExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
+    yyVal = new OpMulExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 10:
 #line 77 "Parser.jay"
   {
-    yyVal = new NumberExpression(new NumberDecimal(((string)yyVals[0+yyTop])));
+    yyVal = new OpMulExpression(((IExpression)yyVals[-1+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 11:
 #line 81 "Parser.jay"
+  {
+    yyVal = new OpDivExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
+  }
+  break;
+case 12:
+#line 87 "Parser.jay"
+  {
+    yyVal = new NumberExpression(new NumberDecimal(((string)yyVals[0+yyTop])));
+  }
+  break;
+case 13:
+#line 91 "Parser.jay"
+  {
+    yyVal = new FuncExpression(((string)yyVals[-3+yyTop]), ((IExpression)yyVals[-1+yyTop]));
+  }
+  break;
+case 14:
+#line 95 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[-1+yyTop]);
   }
@@ -377,39 +398,42 @@ case 11:
 */
 #line default
    static readonly short [] yyLhs  = {              -1,
-    0,    1,    1,    1,    1,    1,    2,    2,    2,    3,
-    3,
+    0,    1,    1,    1,    1,    1,    1,    2,    2,    2,
+    2,    3,    3,    3,
   };
    static readonly short [] yyLen = {           2,
-    1,    1,    2,    2,    3,    3,    1,    3,    3,    1,
-    3,
+    1,    1,    2,    2,    3,    3,    3,    1,    3,    2,
+    3,    1,    4,    3,
   };
    static readonly short [] yyDefRed = {            0,
-    0,    0,    0,   10,    0,    0,    0,    7,    0,    0,
-    0,    0,    0,    0,    0,   11,    0,    0,    8,    9,
+    0,    0,    0,   12,    0,    0,    0,    0,    8,    0,
+    0,    0,    0,    0,    0,    0,    0,    0,   10,   14,
+    0,    0,    0,    0,    9,   11,   13,
   };
-  protected static readonly short [] yyDgoto  = {             5,
-    6,    7,    8,
+  protected static readonly short [] yyDgoto  = {             6,
+    7,    8,    9,
   };
-  protected static readonly short [] yySindex = {         -240,
- -240, -255, -255,    0,    0, -248, -233,    0, -234, -233,
- -233, -255, -255, -255, -255,    0, -233, -233,    0,    0,
+  protected static readonly short [] yySindex = {         -254,
+ -254, -208, -208,    0, -257,    0, -202, -222,    0, -215,
+ -222, -222, -254, -208, -208, -208, -208, -208,    0,    0,
+ -212, -222, -222, -222,    0,    0,    0,
   };
   protected static readonly short [] yyRindex = {            0,
-    0,    0,    0,    0,    0,    9,    1,    0,    0,    4,
-    7,    0,    0,    0,    0,    0,   10,   13,    0,    0,
+    0,    0,    0,    0,    0,    0,    2,    1,    0,    0,
+    4,   12,    0,    0,    0,    0,    0,    0,    0,    0,
+    0,   15,   23,   26,    0,    0,    0,
   };
   protected static readonly short [] yyGindex = {            0,
-   -1,    3,   16,
+    6,   22,   10,
   };
-  protected static readonly short [] yyTable = {             9,
-    2,    1,    0,    3,   10,   11,    4,    4,    1,    5,
-   12,   13,    6,    0,   17,   18,    1,    0,    2,    3,
-    0,    0,    4,   16,   12,   13,    0,   14,   15,   19,
-   20,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
+  protected static readonly short [] yyTable = {            13,
+    2,    1,    1,    3,    2,    3,   10,    0,    4,    5,
+    0,    4,    0,    0,    6,    0,    0,   19,   21,    0,
+   19,   19,    7,   11,   12,    5,   25,   26,    0,    0,
+    0,   19,   19,   19,    1,   22,   23,   24,   17,   18,
+    4,    5,   20,   14,   15,   27,   14,   15,    1,   16,
+    0,    0,   16,    0,    4,    5,   14,   15,    0,    0,
+    0,    0,   16,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -429,17 +453,19 @@ case 11:
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
     0,    0,    0,    0,    0,    0,    0,    0,    2,    2,
-    2,    3,    3,    3,    4,    4,    4,    5,    5,    5,
-    6,    6,    6,
+    2,    3,    3,    3,    0,    2,    0,    0,    3,    4,
+    4,    4,    6,    6,    6,    0,    4,    0,    0,    6,
+    7,    7,    7,    5,    5,    5,    0,    7,    0,    0,
+    5,
   };
-  protected static readonly short [] yyCheck = {             1,
-    0,  257,   -1,    0,    2,    3,    0,  263,    0,    0,
-  259,  260,    0,   -1,   12,   13,  257,   -1,  259,  260,
-   -1,   -1,  263,  258,  259,  260,   -1,  261,  262,   14,
-   15,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
-   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
+  protected static readonly short [] yyCheck = {           257,
+    0,    0,  257,    0,  259,  260,    1,   -1,  263,  264,
+   -1,    0,   -1,   -1,    0,   -1,   -1,    8,   13,   -1,
+   11,   12,    0,    2,    3,    0,   17,   18,   -1,   -1,
+   -1,   22,   23,   24,  257,   14,   15,   16,  261,  262,
+  263,  264,  258,  259,  260,  258,  259,  260,  257,  265,
+   -1,   -1,  265,   -1,  263,  264,  259,  260,   -1,   -1,
+   -1,   -1,  265,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
@@ -459,11 +485,13 @@ case 11:
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,
    -1,   -1,   -1,   -1,   -1,   -1,   -1,   -1,  258,  259,
-  260,  258,  259,  260,  258,  259,  260,  258,  259,  260,
-  258,  259,  260,
+  260,  258,  259,  260,   -1,  265,   -1,   -1,  265,  258,
+  259,  260,  258,  259,  260,   -1,  265,   -1,   -1,  265,
+  258,  259,  260,  258,  259,  260,   -1,  265,   -1,   -1,
+  265,
   };
 
-#line 84 "Parser.jay"
+#line 97 "Parser.jay"
 
 }
 #line default
@@ -550,6 +578,8 @@ namespace yydebug {
   public const int OP_MUL = 261;
   public const int OP_DIV = 262;
   public const int NUM = 263;
+  public const int KEYWORD = 264;
+  public const int COMMA = 265;
   public const int yyErrorCode = 256;
  }
  namespace yyParser {

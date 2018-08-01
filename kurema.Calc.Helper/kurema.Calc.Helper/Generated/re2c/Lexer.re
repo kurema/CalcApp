@@ -86,21 +86,28 @@ loop:
               OP_DIV      = "/";
               LP          = "(";
               RP          = ")";
+              COMMA       = ",";
 
               DIGIT       = [0-9];
-              DIGITNZ     = [1-9];
-              U_INTEGER   = "0" | DIGITNZ DIGIT*;
+              U_INTEGER   = DIGIT+;
               DOUBLE      = U_INTEGER "." DIGIT+;
-              NUM         = U_INTEGER | DOUBLE;
+              FIXED       = U_INTEGER | DOUBLE;
+              FLOAT       = FIXED [eE] [\+\-]? DIGIT+;
+              NUM         = FLOAT | FIXED;
+              
+              WORD        = [a-zA-Z_];
+              KEYWORD     = WORD+;
 
               WHITE_SPACE   { _index = _cursor; goto loop; }
               OP_ADD        { return Token.OP_ADD;  }
               OP_SUB        { return Token.OP_SUB;  }
               OP_MUL        { return Token.OP_MUL;  }
               OP_DIV        { return Token.OP_DIV;  }
+              COMMA           { return Token.COMMA;  }
               LP            { return Token.LP;  }
               RP            { return Token.RP;  }
               NUM           { return Token.NUM;  }
+              KEYWORD       { return Token.KEYWORD; }
             */
         }
     }

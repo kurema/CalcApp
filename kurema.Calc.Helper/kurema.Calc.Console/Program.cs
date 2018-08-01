@@ -6,10 +6,10 @@ namespace kurema.Calc.CUI
     {
         static void Main(string[] args)
         {
-            Console.ReadLine();
-            var value = Helper.Consts.Factorials.Values[800] / Helper.Consts.Factorials.Values[700];
-            Console.WriteLine(value.ToString());
-            Console.ReadLine();
+            //Console.ReadLine();
+            //var value = Helper.Consts.Factorials.Values[800] / Helper.Consts.Factorials.Values[700];
+            //Console.WriteLine(value.ToString());
+            //Console.ReadLine();
 
 
             //Console.WriteLine(Helper.Consts.Primes.Values[666]);
@@ -20,11 +20,11 @@ namespace kurema.Calc.CUI
             //Console.WriteLine(Helper.Consts.FactorialsPrime.Length);
             //Console.WriteLine(Helper.Consts.Factorials.Length);
 
-            //while (true)
-            //{
-            //    var input = Console.ReadLine();
-            //    Console.WriteLine(kurema.Calc.Helper.Environment.Execute(input));
-            //}
+            while (true)
+            {
+                var input = Console.ReadLine();
+                Console.WriteLine(kurema.Calc.Helper.Environment.Helper.Execute(input,new Helper.Environment.Environment()));
+            }
         }
 
         static void ShowFactorialPrime(int max)

@@ -49,7 +49,15 @@ namespace kurema.Calc.Helper.Values
                 Denominator = BigInteger.Negate(Denominator);
                 Numerator = BigInteger.Negate(Numerator);
             }
-            //ToDo: 約分
+            foreach(var item in Calc.Helper.Consts.Primes.Values)
+            {
+                if (item  > Numerator || item  > Denominator) break;
+                while(Numerator%item==0 && Denominator % item == 0)
+                {
+                    Numerator /= item;
+                    Denominator /= item;
+                }
+            }
         }
 
         public NumberRational Add(NumberRational value) => this + value;
@@ -255,8 +263,8 @@ namespace kurema.Calc.Helper.Values
             if (a == null || b == null) return null;
             var (ta, tb) = (NormalizeExponent(a, b));
             //指数部がint.MaxValue違う値を加算しても変化は0とみなせます。
-            if (ta == null) return tb;
-            if (tb == null) return ta;
+            if (ta == null) return a;
+            if (tb == null) return b;
             return new NumberDecimal(ta.Significand + tb.Significand, ta.Exponent);
         }
         public static NumberDecimal operator -(NumberDecimal a, NumberDecimal b) => a + (-b);

@@ -18,6 +18,8 @@ namespace kurema.Calc.Helper.Interpreter
 %token <string> OP_MUL
 %token <string> OP_DIV
 %token <string> NUM
+%token <string> KEYWORD
+%token <string> COMMA
 
 %type <IExpression> Formula
 %type <IExpression> Term
@@ -47,6 +49,10 @@ Formula
   {
     $$ = new OpSubExpression( new NumberExpression(new NumberDecimal(0)), $2);
   }
+  | Formula COMMA Term
+  {
+    $$ = new ArgumentExpression($1, $3);
+  }
   | Formula OP_ADD Term
   {
     $$ = new OpAddExpression($1, $3);
@@ -65,6 +71,10 @@ Term
   {
     $$ = new OpMulExpression($1, $3);
   }
+  | Term  Num
+  {
+    $$ = new OpMulExpression($1, $2);
+  }
   | Term OP_DIV Num
   {
     $$ = new OpDivExpression($1, $3);
@@ -75,11 +85,14 @@ Num
   {
     $$ = new NumberExpression(new NumberDecimal($1));
   }
+  | KEYWORD LP Formula RP
+  {
+    $$ = new FuncExpression($1, $3);
+  }
   | LP Formula RP
   {
     $$ = $2;
   }
-
 
 %%
 }
