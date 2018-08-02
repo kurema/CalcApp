@@ -7,10 +7,16 @@
         private int    _index;
         private int    _token;
         private int    _cursor;
-        private int    _marker; public Lexer (string script)
+        private int    _marker;
+		private kurema.Calc.Helper.Environment.Environment _environment;
+
+		public Lexer (string script, kurema.Calc.Helper.Environment.Environment environment)
         {
             _script = script;
-        } public bool advance ()
+			_environment = environment;
+        }
+		
+		public bool advance ()
         {
             if ( _script.Length <= _index )
             {
@@ -20,11 +26,15 @@
             }
 
             _token = Lex(_index);
-            _value = _script.Substring(_index, (_cursor - _index));
+            _value = currentValue();
             _index = _cursor;
 
             return true;
         }
+
+		public string currentValue(){
+		   return _script.Substring(_index, (_cursor - _index));
+		}
 
         public int token ()
         {
@@ -107,7 +117,11 @@ loop:
               LP            { return Token.LP;  }
               RP            { return Token.RP;  }
               NUM           { return Token.NUM;  }
-              KEYWORD       { return Token.KEYWORD; }
+              KEYWORD       { 
+			     if(_environment.GetFunction(currentValue())!=null) return Token.KEYWORD_FUNC;
+			     if(_environment.GetVariable(currentValue())!=null) return Token.KEYWORD_VAR;
+				 return Token.KEYWORD_VAR;
+			  }
             */
         }
     }

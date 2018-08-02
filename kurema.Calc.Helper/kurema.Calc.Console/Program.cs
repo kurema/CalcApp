@@ -20,6 +20,19 @@ namespace kurema.Calc.CUI
             //Console.WriteLine(Helper.Consts.FactorialsPrime.Length);
             //Console.WriteLine(Helper.Consts.Factorials.Length);
 
+            //for(int i = 0; i < 10; i++)
+            //{
+            //    Console.WriteLine(Helper.MathEx.Factorial(i).ToString());
+            //}
+
+            //while (true)
+            //{
+            //    var a = int.Parse(Console.ReadLine());
+            //    var b = int.Parse(Console.ReadLine());
+            //    Console.WriteLine(String.Format("{0}P{1} ",a,b)+Helper.MathEx.FactorialPower(a, b));
+            //    Console.WriteLine(String.Format("{0}C{1} ", a, b) + Helper.MathEx.BinomialCoefficients(a, b));
+            //}
+
             while (true)
             {
                 var input = Console.ReadLine();

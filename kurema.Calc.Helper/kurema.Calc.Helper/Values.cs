@@ -6,12 +6,13 @@ using System.Numerics;
 
 namespace kurema.Calc.Helper.Values
 {
-    public interface IValue
+    public interface IValue: IEquatable<IValue>
     {
         IValue Add(IValue value);
         IValue Multiply(IValue value);
         IValue Substract(IValue value);
         IValue Divide(IValue value);
+        IValue Power(int y);
         //IValue Remainder(IValue value);
     }
 
@@ -24,7 +25,20 @@ namespace kurema.Calc.Helper.Values
         public IValue Add(IValue value) => this;
         public IValue Divide(IValue value) => this;
         public IValue Multiply(IValue value) => this;
+        public IValue Power(double y) => this;
+
+        public IValue Power(int y)
+        {
+            throw new NotImplementedException();
+        }
+
         public IValue Substract(IValue value) => this;
+
+        public bool Equals(IValue other)
+        {
+            if (other is ErrorValue e) return this.Message == e.Message;
+            return false;
+        }
 
         public static class ErrorValues
         {
@@ -33,7 +47,7 @@ namespace kurema.Calc.Helper.Values
         }
     }
 
-    public class NumberRational : IValue
+    public class NumberRational : IValue, IEquatable<NumberRational>, IEquatable<NumberDecimal>
     {
         public readonly BigInteger Numerator;
         public readonly BigInteger Denominator;
@@ -58,10 +72,27 @@ namespace kurema.Calc.Helper.Values
                     Denominator /= item;
                 }
             }
+            while (Denominator % 2 == 0)
+            {
+                Denominator /= 2;
+                Exponent -= 1;
+                Numerator *= 5;
+            }
+            while (Denominator % 5 == 0)
+            {
+                Denominator /= 5;
+                Exponent -= 1;
+                Numerator *= 2;
+            }
+            while (Numerator % 10 == 0)
+            {
+                Numerator /= 10;
+                Exponent++;
+            }
         }
 
         public NumberRational Add(NumberRational value) => this + value;
-        public NumberRational Divide(NumberRational value) => this * value;
+        public IValue Divide(NumberRational value) => this / value;
         public NumberRational Multiply(NumberRational value) => this * value;
         public NumberRational Substract(NumberRational value) => this - value;
 
@@ -102,7 +133,7 @@ namespace kurema.Calc.Helper.Values
         public static NumberRational operator *(NumberRational a, NumberRational b)
         {
             if (a == null || b==null) return null;
-            return new NumberRational(a.Numerator * b.Numerator, a.Denominator * b.Denominator);
+            return new NumberRational(a.Numerator * b.Numerator, a.Denominator * b.Denominator, a.Exponent + b.Exponent);
         }
 
         public static IValue operator /(NumberRational a, NumberRational b)
@@ -115,16 +146,40 @@ namespace kurema.Calc.Helper.Values
                 case null:return null;
                 default:throw new Exception("This line should not be called");
             }
-
         }
 
         public static NumberRational operator +(NumberRational a) => a;
 
         public static NumberRational operator -(NumberRational a) => a == null ? null : new NumberRational(-a.Numerator, a.Denominator, a.Exponent);
 
+        public static bool operator ==(NumberRational a, NumberRational b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(NumberRational a, NumberRational b)
+        {
+            return !(a == b);
+        }
+
+
+        public static NumberRational Power(NumberRational x,int exponent)
+        {
+            return new NumberRational(
+                BigInteger.Pow(x.Numerator, exponent),
+                BigInteger.Pow(x.Denominator, exponent),
+                x.Exponent * exponent);
+        }
+
+        public int? GetInt()
+        {
+            if (this.Denominator != 1) return null;
+            return new NumberDecimal(this.Numerator, this.Exponent).GetInt();
+        }
+
         public override string ToString()
         {
-            return String.Format("{0} e {2} / {1}",this.Numerator,this.Denominator,this.Exponent);
+            return Helper.GetString(Numerator, Denominator, Exponent);
         }
 
         #region
@@ -164,18 +219,71 @@ namespace kurema.Calc.Helper.Values
                 default: return ErrorValue.ErrorValues.UnknownValueError;
             }
         }
+
+        public IValue Power(int y)
+        {
+            return Power(y);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as NumberRational) || Equals(obj as NumberDecimal);
+        }
+
+        public bool Equals(NumberRational other)
+        {
+            return other != null &&
+                   Numerator.Equals(other.Numerator) &&
+                   Denominator.Equals(other.Denominator) &&
+                   Exponent.Equals(other.Exponent);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -547078731;
+            hashCode = hashCode * -1521134295 + EqualityComparer<BigInteger>.Default.GetHashCode(Numerator);
+            hashCode = hashCode * -1521134295 + EqualityComparer<BigInteger>.Default.GetHashCode(Denominator);
+            hashCode = hashCode * -1521134295 + EqualityComparer<BigInteger>.Default.GetHashCode(Exponent);
+            return hashCode;
+        }
+
+        public bool Equals(NumberDecimal other)
+        {
+            return other != null &&
+                   Numerator.Equals(other.Significand) &&
+                   Denominator.Equals(1) &&
+                   Exponent.Equals(other.Exponent);
+        }
+
+        public bool Equals(IValue other)
+        {
+            return Equals(other);
+        }
         #endregion
     }
 
-    public class NumberDecimal : IValue
+    public class NumberDecimal : IValue, IEquatable<NumberRational>, IEquatable<NumberDecimal>
     {
         public readonly BigInteger Significand;
         public readonly BigInteger Exponent;
 
+        public static NumberDecimal Zero => new NumberDecimal(0, 0);
+        public static NumberDecimal One => new NumberDecimal(1, 0);
+
         public NumberDecimal(BigInteger significand, BigInteger exponent)
         {
-            Significand = significand;
-            Exponent = exponent;
+            (Significand , Exponent) = FixExponent(significand, exponent);
+        }
+
+        public static (BigInteger significand, BigInteger exponent) FixExponent(BigInteger significand, BigInteger exponent)
+        {
+            if(significand==0) return (significand, exponent);
+            while (significand % 10 == 0)
+            {
+                significand /= 10;
+                exponent++;
+            }
+            return (significand, exponent);
         }
 
         public NumberDecimal(double value):this(value.ToString())
@@ -190,6 +298,7 @@ namespace kurema.Calc.Helper.Values
                 {
                     this.Significand = BigInteger.Parse(m.Groups[2].Value + m.Groups[3].Value);
                     this.Exponent = - m.Groups[3].Length;
+                    (Significand, Exponent) = FixExponent(Significand, Exponent);
                     return;
                 }
             }
@@ -199,14 +308,16 @@ namespace kurema.Calc.Helper.Values
                 {
                     this.Significand = BigInteger.Parse(m.Groups[1].Value + m.Groups[2].Value + m.Groups[3].Value);
                     this.Exponent = - m.Groups[3].Length + BigInteger.Parse(m.Groups[4].Value + m.Groups[5].Value);
+                    (Significand, Exponent) = FixExponent(Significand, Exponent);
                     return;
                 }
             }
+            throw new Exception("Failed to Parse.");
         }
 
-        public NumberDecimal ShiftExponent(BigInteger exponent)
+        public BigInteger? ShiftExponent(BigInteger exponent)
         {
-            if (exponent == this.Exponent) return this;
+            if (exponent == this.Exponent) return this.Significand;
             if (exponent < this.Exponent)
             {
                 var expDiff = this.Exponent - exponent;
@@ -217,15 +328,15 @@ namespace kurema.Calc.Helper.Values
                 else
                 {
                     var resultSig = this.Significand * BigInteger.Pow(10, (int)expDiff);
-                    return new NumberDecimal(resultSig, exponent);
+                    return resultSig;
                 }
             }
             {
                 //精度が下がるので注意!
                 var expDiff = exponent - this.Exponent;
-                if(expDiff > int.MaxValue) { return new NumberDecimal(0,exponent); }
+                if(expDiff > int.MaxValue) { return 0; }
                 var resultSig = this.Significand / BigInteger.Pow(10, (int)expDiff);
-                return new NumberDecimal(resultSig, exponent);
+                return resultSig;
             }
         }
 
@@ -239,18 +350,17 @@ namespace kurema.Calc.Helper.Values
 
         public (BigInteger,NumberDecimal,bool) DivideDecimal(NumberDecimal number)
         {
-            var (a, b) = (NormalizeExponent(this, number));
-            if (a == null) return (int.MaxValue, new NumberDecimal(-1,0),false);//a is too large.
-            if (b == null) return (0, a, true);//b is too large
-            BigInteger remainder;
-            var div = BigInteger.DivRem(a.Significand, b.Significand, out remainder);
-            return (div, new NumberDecimal(remainder, a.Exponent), true);
+            var (a, b, e) = (NormalizeExponent(this, number));
+            if (!a.HasValue) return (int.MaxValue, new NumberDecimal(-1,0),false);//a is too large.
+            if (!b.HasValue) return (0, this, true);//b is too large
+            var div = BigInteger.DivRem(a.Value, b.Value, out BigInteger remainder);
+            return (div, new NumberDecimal(remainder, e), true);
         }
 
-        public static (NumberDecimal a,NumberDecimal b) NormalizeExponent(NumberDecimal a,NumberDecimal b)
+        public static (BigInteger? a,BigInteger? b,BigInteger exponent) NormalizeExponent(NumberDecimal a,NumberDecimal b)
         {
             var exp = BigInteger.Min(a.Exponent, b.Exponent);
-            return (a.ShiftExponent(exp), b.ShiftExponent(exp));
+            return (a.ShiftExponent(exp), b.ShiftExponent(exp),exp);
         }
 
         public static implicit operator NumberDecimal(BigInteger value)
@@ -261,11 +371,11 @@ namespace kurema.Calc.Helper.Values
         public static NumberDecimal operator +(NumberDecimal a, NumberDecimal b)
         {
             if (a == null || b == null) return null;
-            var (ta, tb) = (NormalizeExponent(a, b));
+            var (ta, tb,e) = (NormalizeExponent(a, b));
             //指数部がint.MaxValue違う値を加算しても変化は0とみなせます。
             if (ta == null) return a;
             if (tb == null) return b;
-            return new NumberDecimal(ta.Significand + tb.Significand, ta.Exponent);
+            return new NumberDecimal(ta.Value + tb.Value, e);
         }
         public static NumberDecimal operator -(NumberDecimal a, NumberDecimal b) => a + (-b);
 
@@ -296,7 +406,25 @@ namespace kurema.Calc.Helper.Values
 
         public override string ToString()
         {
-            return String.Format("{0} e {1}", this.Significand, this.Exponent);
+            return Helper.GetString(Significand, 1, Exponent);
+        }
+
+        public static NumberDecimal Power(NumberDecimal x, int exponent)
+        {
+            return new NumberDecimal(
+                BigInteger.Pow(x.Significand, exponent),
+                x.Exponent * exponent);
+        }
+
+        public int? GetInt()
+        {
+            if (this.Exponent < 0) return null;
+            var target = this.ShiftExponent(0);
+            if (target >= Int32.MinValue && target <= Int32.MaxValue)
+            {
+                return (int)target;
+            }
+            return null;
         }
 
         #region
@@ -335,6 +463,28 @@ namespace kurema.Calc.Helper.Values
                 case NumberRational number: return ((NumberRational)this).Divide(number);
                 default: return ErrorValue.ErrorValues.UnknownValueError;
             }
+        }
+
+        public IValue Power(int y)
+        {
+            return Power(this, y);
+        }
+
+        public bool Equals(NumberDecimal other)
+        {
+            return other != null &&
+                this.Significand.Equals(other.Significand) &&
+                this.Exponent.Equals(other.Exponent);
+        }
+
+        public bool Equals(NumberRational other)
+        {
+            return other?.Equals(this) ?? false;
+        }
+
+        public bool Equals(IValue other)
+        {
+            return this.Equals(other as NumberDecimal) || this.Equals(other as NumberRational);
         }
         #endregion
     }

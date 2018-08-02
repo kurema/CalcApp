@@ -8,33 +8,6 @@ using kurema.Calc.Helper.Values;
 
 namespace kurema.Calc.Helper.Environment
 {
-    public static class Helper
-    {
-        public static string Execute(string script,Environment environment)
-        {
-            try
-            {
-                var lexer = new Lexer(script);
-                var parser = new Parser();
-                var expression = (IExpression)parser.yyparse(lexer);
-                return expression.Evaluate(environment).ToString();
-            }
-            catch (Exception e)
-            {
-                return e.Message;
-            }
-        }
-    }
-
-    public class Environment
-    {
-        public Dictionary<string, IFunction> Functions = new Dictionary<string, IFunction>() {
-            {"rec",Calc.Helper.Environment.Functions.Reciprocal },
-            {"sum",Calc.Helper.Environment.Functions.Sum },
-            {"prime",Calc.Helper.Environment.Functions.Prime },
-        };
-    }
-
     public interface IFunction
     {
         IExpression Evaluate(Environment environment, params IExpression[] expressions);
@@ -49,38 +22,52 @@ namespace kurema.Calc.Helper.Environment
             new FunctionDelegate(0, int.MaxValue, (a, b) => {
                 if (b.Length == 0) return new NumberExpression(new NumberDecimal(0));
                 var result = b[0];
-                for(int i = 1; i < b.Length; i++)
+                for (int i = 1; i < b.Length; i++)
                 {
                     result = new OpAddExpression(result, b[i]);
                 }
                 return result;
-            },"sum");
+            }, "sum");
         public static IFunction Prime =>
             new FunctionDelegate(1, 1, (a, b) =>
             {
                 var c = b[0].Evaluate(a);
-                if(c is NumberDecimal d)
+                if (c is NumberDecimal d)
                 {
-                    //Fix me.
-                    if( d.Significand>=0 && d.Significand < Consts.Primes.Length)
+                    var cnt = d.GetInt();
+                    if (cnt.HasValue && Consts.Primes.Length>cnt.Value)
                     {
-                        return new NumberExpression(new NumberDecimal(Consts.Primes.Values[(int)d.Significand], 1));
-                    } 
+                        return new NumberExpression(new NumberDecimal(Consts.Primes.Values[cnt.Value], 0));
+                    }
                 }
-                throw new Exception("Failed");
+                return null;
             }, "prime");
+        public static IFunction Factorial =>
+            new FunctionDelegate(1, 1, (a, b) =>
+              {
+              var c = b[0].Evaluate(a);
+                  if (c is NumberDecimal d)
+                  {
+                      var cnt = d.GetInt();
+                      if (cnt.HasValue && Consts.Primes.Length > cnt.Value)
+                      {
+                          return new NumberExpression(new NumberDecimal(Consts.Factorials.Values[cnt.Value], 0));
+                      }
+                  }
+                  return null;
+              }, "factorial");
     }
 
-    public class FunctionDelegate:IFunction
+    public class FunctionDelegate : IFunction
     {
         public readonly int ArgumentCountMinimum;
         public readonly int ArgumentCountMaximum;
         public readonly Func<Environment, Expressions.IExpression[], IExpression> Content;
         public readonly string DefaultName;
 
-        public FunctionDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment,Expressions.IExpression[], IExpression> content, string name)
+        public FunctionDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, Expressions.IExpression[], IExpression> content, string name)
         {
-            ArgumentCountMinimum = Math.Min( argumentCountMinimum,argumentCountMaximum);
+            ArgumentCountMinimum = Math.Min(argumentCountMinimum, argumentCountMaximum);
             ArgumentCountMaximum = Math.Max(argumentCountMinimum, argumentCountMaximum);
             Content = content ?? throw new ArgumentNullException(nameof(content));
             DefaultName = name ?? throw new ArgumentNullException(nameof(name));
@@ -88,7 +75,7 @@ namespace kurema.Calc.Helper.Environment
 
         public bool CanEvaluate(int argCount)
         {
-            return ArgumentCountMinimum <= argCount && argCount < ArgumentCountMaximum;
+            return ArgumentCountMinimum <= argCount && argCount <= ArgumentCountMaximum;
         }
 
         public IExpression Evaluate(Environment environment, params IExpression[] expressions)

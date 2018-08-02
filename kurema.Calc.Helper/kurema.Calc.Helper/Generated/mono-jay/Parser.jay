@@ -18,12 +18,18 @@ namespace kurema.Calc.Helper.Interpreter
 %token <string> OP_MUL
 %token <string> OP_DIV
 %token <string> NUM
-%token <string> KEYWORD
 %token <string> COMMA
+%token <string> KEYWORD
+%token <string> KEYWORD_VAR
+%token <string> KEYWORD_FUNC
 
+%type <IExpression> Arguments
 %type <IExpression> Formula
 %type <IExpression> Term
 %type <IExpression> Num
+%type <IExpression> Func
+%type <IExpression> Variable
+%type <IExpression> Coefficient
 
 %left LP RP
 %left OP_ADD OP_SUB
@@ -35,6 +41,16 @@ namespace kurema.Calc.Helper.Interpreter
 
 Sentence
   : Formula
+
+Arguments
+  : Formula
+  {
+    $$ = $1;
+  }
+  | Arguments COMMA Formula
+  {
+    $$ = new ArgumentExpression($1, $3);
+  }
 
 Formula
   : Term
@@ -49,10 +65,6 @@ Formula
   {
     $$ = new OpSubExpression( new NumberExpression(new NumberDecimal(0)), $2);
   }
-  | Formula COMMA Term
-  {
-    $$ = new ArgumentExpression($1, $3);
-  }
   | Formula OP_ADD Term
   {
     $$ = new OpAddExpression($1, $3);
@@ -63,35 +75,70 @@ Formula
   }
 
 Term
+  : Coefficient
+  {
+    $$ = $1;
+  }
+  | Term Coefficient
+  {
+    $$ = new OpMulExpression($1, $2);
+  }
+  | Term OP_MUL Coefficient
+  {
+    $$ = new OpMulExpression($1, $3);
+  }
+  | Term OP_DIV Coefficient
+  {
+    $$ = new OpDivExpression($1, $3);
+  }
+
+Coefficient
   : Num
   {
     $$ = $1;
   }
-  | Term OP_MUL Num
+  | Variable
   {
-    $$ = new OpMulExpression($1, $3);
+    $$ = $1;
   }
-  | Term  Num
+  | Func
   {
-    $$ = new OpMulExpression($1, $2);
+    $$ = $1;
   }
-  | Term OP_DIV Num
-  {
-    $$ = new OpDivExpression($1, $3);
-  }
+
 
 Num
   : NUM
   {
     $$ = new NumberExpression(new NumberDecimal($1));
   }
-  | KEYWORD LP Formula RP
-  {
-    $$ = new FuncExpression($1, $3);
-  }
   | LP Formula RP
   {
     $$ = $2;
+  }
+
+Variable
+  : KEYWORD_VAR
+  {
+    $$ = new VariableExpression($1);
+  }
+
+Func
+  : KEYWORD_FUNC LP Arguments RP
+  {
+    $$ = new FuncExpression($1, $3);
+  }
+  | KEYWORD_FUNC NUM
+  {
+    $$ = new FuncExpression($1, new NumberExpression(new NumberDecimal($2)));
+  }
+  | KEYWORD_FUNC Variable
+  {
+    $$ = new FuncExpression($1, $2);
+  }
+  | KEYWORD_FUNC LP RP
+  {
+    $$ = new FuncExpression($1, null);
   }
 
 %%

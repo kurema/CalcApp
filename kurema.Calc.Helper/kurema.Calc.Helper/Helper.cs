@@ -4,6 +4,8 @@ using System.Text;
 
 using System.Linq;
 
+using System.Numerics;
+
 namespace kurema.Calc.Helper
 {
     public static class Helper
@@ -27,6 +29,43 @@ namespace kurema.Calc.Helper
             }
 
             return Enumerable.Range(2, max - 1).Where(x => isPrimes[x - 2]).ToList();
+        }
+
+        public static string GetString(BigInteger Numerator,BigInteger Denominator,BigInteger Exponent)
+        {
+            if (Numerator == 0) return "0";
+            var num = Numerator.ToString();
+            if (Exponent == 0)
+            {
+            }
+            else if (Exponent < 10 && Exponent > 0)
+            {
+                num = num + new string('0', (int)Exponent);
+            }
+            else if (-Exponent < num.Length && Exponent < 0)
+            {
+                var dec= num.Substring(num.Length + (int)Exponent).TrimEnd('0');
+                num = num.Substring(0, num.Length + (int)Exponent) + (dec.Length > 0 ? "." + dec : "");
+            }
+            else if (-Exponent - num.Length < 10 && Exponent < 0)
+            {
+                var dec = new string('0', -(int)Exponent - num.Length) + num.TrimEnd('0');
+                num = "0" + (dec.Length > 0 ? "." + dec : "");
+            }
+            else
+            {
+                num = num[0] + (num.Length > 1 ? "." + num.Substring(1).TrimEnd('0') : "") + "e" + (Exponent + (num.Length - 1)).ToString();
+            }
+            var builder = new StringBuilder(num);
+            if (Denominator == 0)
+            {
+                return Values.ErrorValue.ErrorValues.DivisionByZeroError.Message;
+            }else if (Denominator != 1)
+            {
+                builder.Append("/");
+                builder.Append(Denominator.ToString());
+            }
+            return builder.ToString();
         }
     }
 }
