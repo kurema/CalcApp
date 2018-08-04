@@ -13,6 +13,11 @@ namespace kurema.Calc.Helper.Expressions
         IValue Evaluate(Environment.Environment environment);
         IExpression Format();
         IExpression Format(Environment.Environment environment);
+
+        IExpression Add(IExpression expression);
+        IExpression Multiply(IExpression expression);
+
+        IExpression MemberSelect(Func<IExpression, IExpression> func);
     }
 
     public class NumberExpression : IExpression
@@ -23,6 +28,21 @@ namespace kurema.Calc.Helper.Expressions
         }
 
         public IValue Content { get; }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression, () =>
+            {
+                switch (expression)
+                {
+                    case NumberExpression number: return new NumberExpression(this.Content.Add(number.Content));
+                    case ArgumentExpression argument: return argument.MemberSelect(a => a.Add(this));
+                    case FormulaExpression formula: return formula.Add(this);
+                    default:
+                        return new FormulaExpression(expression, this);
+                }
+            });
+        }
 
         public IValue Evaluate(Environment.Environment environment)
         {
@@ -41,10 +61,34 @@ namespace kurema.Calc.Helper.Expressions
             return Content;
         }
 
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return func(this);
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression, () =>
+            {
+                switch (expression)
+                {
+                    case NumberExpression number: return new NumberExpression(this.Content.Multiply(number.Content));
+                    case ArgumentExpression argument: return argument.MemberSelect(a => a.Multiply(this));
+                    case FormulaExpression formula: return formula.Multiply(this);
+                    default:
+                        return new FormulaExpression(expression, this);
+                }
+            });
+        }
+
         public override string ToString()
         {
             return Content.ToString();
         }
+
+        public static NumberExpression Zero => new NumberExpression(NumberDecimal.Zero);
+        public static NumberExpression One => new NumberExpression(NumberDecimal.One);
+        public static NumberExpression MinusOne => new NumberExpression(NumberDecimal.MinusOne);
     }
 
     public class OpAddExpression:IExpression
@@ -58,6 +102,11 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Right { get; }
 
         public IExpression Left { get; }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression, (a, b) => new FormulaExpression(a.Left, a.Right, b));
+        }
 
         public IValue Evaluate(Environment.Environment environment)
         {
@@ -90,6 +139,16 @@ namespace kurema.Calc.Helper.Expressions
                 }
             }
             return new FormulaExpression(Right, Left);
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new OpAddExpression(func(this.Left), func(this.Right));
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression, () => this.MemberSelect(a => a.Multiply(expression)));
         }
 
         public override string ToString()
@@ -142,7 +201,16 @@ namespace kurema.Calc.Helper.Expressions
 
         public IValue Evaluate(Environment.Environment environment)
         {
-            throw new NotImplementedException();
+            IValue result = Value;
+            foreach(var item in Terms)
+            {
+                result = result.Add(item.Evaluate(environment));
+            }
+            foreach (var item in Other)
+            {
+                result = result.Add(item.Evaluate(environment));
+            }
+            return result;
         }
 
         public IExpression Format(Environment.Environment environment) => Format();
@@ -207,7 +275,9 @@ namespace kurema.Calc.Helper.Expressions
 
         public FormulaExpression Multiply(IValue value)
         {
-            return new FormulaExpression(this.Value.Multiply(value), Terms, Other);
+            return new FormulaExpression(this.Value.Multiply(value),
+                Terms.Select(a=>a.Multiply(value)).ToArray(),
+                Other.Select(a=>a.Multiply(new NumberExpression(value))).ToArray());
         }
 
         public FormulaExpression Multiply(NumberExpression value)
@@ -215,6 +285,37 @@ namespace kurema.Calc.Helper.Expressions
             return this.Multiply(value.Content);
         }
 
+        IExpression IExpression.Add(IExpression expression)
+        {
+            return Add(expression);
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            { if (expression is NumberExpression number && number.Content == NumberDecimal.Zero) return NumberExpression.Zero; }
+            { if (expression is NumberExpression number && number.Content == NumberDecimal.One) return this; }
+            if (expression is NumberExpression n) return Multiply(n.Content);
+            return MemberSelect(a => a.Multiply(expression));
+        }
+
+        public FormulaExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new FormulaExpression(GetMembers().Select(a => func(a)).ToArray());
+        }
+
+        public IExpression[] GetMembers()
+        {
+            List<IExpression> expressions = new List<IExpression>();
+            expressions.Add(new NumberExpression(this.Value));
+            expressions.AddRange(this.Terms);
+            expressions.AddRange(this.Other);
+            return expressions.ToArray();
+        }
+
+        IExpression IExpression.MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return MemberSelect(func);
+        }
     }
 
     public class TermExpression : IExpression
@@ -283,21 +384,53 @@ namespace kurema.Calc.Helper.Expressions
             return new TermExpression(this.Coefficient.Multiply(value), this.Variables);
         }
 
-        public TermExpression Multiply(VariablePowExpression value)
+        public TermExpression Multiply(params VariablePowExpression[] values)
         {
             var result = this.Variables.ToList();
-            if (result.Count(a => a.Variable.Variable == value.Variable.Variable) == 0)
+            foreach (var value in values)
             {
-                result.Add(value);
-                return new TermExpression(this.Coefficient, value);
+                if (result.Count(a => a.Variable.Variable == value.Variable.Variable) == 0)
+                {
+                    result.Add(value);
+                }
+                else
+                {
+                    result = result
+                        .Select(a => a.Variable.Variable != value.Variable.Variable ? a :
+                            new VariablePowExpression(a.Variable, new NumberExpression(a.Exponent.Content.Add(value.Exponent.Content)))
+                    ).ToList();
+                }
             }
-            else
-            {
-                result = result.Select(a => a.Variable.Variable != value.Variable.Variable ? a :
-                  new VariablePowExpression(a.Variable, new NumberExpression(a.Exponent.Content.Add(value.Exponent.Content)))
-                ).ToList();
-                return new TermExpression(this.Coefficient, result.ToArray());
-            }
+            return new TermExpression(this.Coefficient, result.ToArray());
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression, () => new OpAddExpression(this, expression));
+        }
+
+        public IExpression Multiply(IExpression ex)
+        {
+            return Helper.ExpressionMul(this, ex, ()=>{
+                switch (ex)
+                {
+                    case NumberExpression expression: return new TermExpression(this.Coefficient.Multiply(expression.Content), this.Variables);
+                    case VariablePowExpression expression: return this.Multiply(expression);
+                    case VariableExpression expression: return this.Multiply(new VariablePowExpression(expression));
+                    case TermExpression expression:
+                        {
+                            var result = this.Multiply(expression.Coefficient);
+                            return result.Multiply(expression.Variables);
+                        }
+                    default: return new OpMulExpression(this, ex);
+                }
+            });
+        }
+
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return func(this);
         }
 
         public static implicit operator TermExpression(VariablePowExpression value)
@@ -339,7 +472,27 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return new OpAddExpression(Right, new OpMulExpression(Left, new NumberExpression(new NumberDecimal(-1, 0)))).Format(environment);
+            return new OpAddExpression(Left, GetRightAsMinus()).Format(environment);
+        }
+
+        public IExpression GetRightAsMinus()
+        {
+            return Right.Multiply(NumberExpression.MinusOne);
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression, () => new FormulaExpression(Left, GetRightAsMinus(), expression));
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return MemberSelect((a) => a.Multiply(expression));
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new OpSubExpression(func(Left), func(Right));
         }
     }
 
@@ -372,35 +525,174 @@ namespace kurema.Calc.Helper.Expressions
             var RightF = Right.Format(environment);
             var LeftF = Left.Format(environment);
 
+            var rn = RightF as NumberExpression;
+            var ln = LeftF as NumberExpression;
+
             {
-                if (RightF is NumberExpression r && LeftF is NumberExpression l)
+                if (rn != null && ln != null)
                 {
-                    return new NumberExpression(r.Content.Multiply(l.Content));
+                    return new NumberExpression(rn.Content.Multiply(ln.Content));
+                }
+                if ((rn != null && rn.Content.Equals(NumberDecimal.Zero)) || (ln != null && ln.Content.Equals(NumberDecimal.Zero)))
+                {
+                    return new NumberExpression(NumberDecimal.Zero);
                 }
             }
 
             TermExpression lt = (LeftF as TermExpression) ?? (LeftF as VariableExpression);
             TermExpression rt = (RightF as TermExpression) ?? (RightF as VariableExpression);
 
+            if (rn != null && lt != null)
             {
-                if (RightF is NumberExpression r)
-                {
-                    if (lt != null) return lt.Multiply(r.Content);
-                }
+                return lt.Multiply(rn.Content);
             }
+            if (ln != null && rt != null)
             {
-                if (LeftF is NumberExpression l)
-                {
-                    if (rt != null) return rt.Multiply(l.Content);
-                }
+                return rt.Multiply(ln.Content);
             }
+            if (rt != null && lt != null)
             {
-                if (rt != null && lt != null)
-                {
-                    return rt.Multiply(lt);
-                }
+                return rt.Multiply(lt);
             }
             return new OpMulExpression(LeftF, RightF);
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this,expression,()=> Left.Multiply(Right).Add(expression));
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression, () => Left.Multiply(Right).Multiply(expression));
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new OpMulExpression(func(Left), func(Right));
+        }
+
+        public static IExpression GetNegate(IExpression expression)
+        {
+            return NumberExpression.MinusOne.Multiply(expression);
+        }
+    }
+
+    public class OpPowExpression:IExpression
+    {
+        public OpPowExpression(IExpression @base, IExpression exponent)
+        {
+            Base = @base ?? throw new ArgumentNullException(nameof(@base));
+            Exponent = exponent ?? throw new ArgumentNullException(nameof(exponent));
+        }
+
+        public IExpression Base { get; }
+        public IExpression Exponent { get; }
+
+        public IValue Evaluate(Environment.Environment environment)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IExpression Format()
+        {
+            //ToDo: fix.
+            return this;
+        }
+
+        public IExpression Format(Environment.Environment environment)
+        {
+            //ToDo: fix.
+            return new OpPowExpression(Base.Format(environment), Exponent.Format(environment));
+        }
+
+        public override string ToString()
+        {
+            return Base.ToString() + "^" + Exponent.ToString();
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new OpPowExpression(func(Base), func(Exponent));
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression, () => new OpAddExpression(this, expression));
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression, () => new OpMulExpression(this, expression));
+        }
+    }
+
+    public class OpFactorialExpression : IExpression
+    {
+        public OpFactorialExpression(IExpression n)
+        {
+            N = n ?? throw new ArgumentNullException(nameof(n));
+        }
+
+        public IExpression N { get; }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression, () => GetExpression().Add(expression));
+        }
+
+
+        public IExpression GetExpression()
+        {
+            if (N is NumberExpression n)
+            {
+                var num = n.Content.GetInt();
+                if (num.WithinRange && num.Precise)
+                {
+                    var f = MathEx.Factorial(num.Value);
+                    if (f >= 0) return this;
+                }
+                return this;
+            }
+            return this;
+        }
+
+        public IValue Evaluate(Environment.Environment environment)
+        {
+            var a = N.Evaluate(environment).GetInt();
+            if (!a.WithinRange) return NumberDecimal.Zero;
+            return new NumberDecimal(MathEx.Factorial(a.Value), 0);
+        }
+
+        public IExpression Format() => Format(null);
+
+        public IExpression Format(Environment.Environment environment)
+        {
+            var n = N.Format(environment);
+            if (n is NumberExpression number)
+            {
+                var a = number.Content.GetInt();
+                if (a.WithinRange)
+                {
+                    return new NumberExpression(new NumberDecimal(MathEx.Factorial(a.Value), 0));
+                }
+            }
+            return new OpFactorialExpression(n);
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new OpFactorialExpression(func(N));
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression, () => GetExpression().Multiply(expression));
+        }
+
+        public override string ToString()
+        {
+            return N.ToString() + "!";
         }
     }
 
@@ -430,8 +722,45 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            //ToDo: Implement.
-            return this;
+            var leftF = Left.Format();
+            var rightF = Right.Format();
+
+            {
+                if (leftF is NumberExpression leftN && rightF is NumberExpression rightN)
+                {
+                    return new NumberExpression(leftN.Content.Divide(rightN.Content));
+                }
+            }
+            //Powerと間違えた。
+            //{
+            //    if (leftF is VariablePowExpression leftN && rightF is NumberExpression rightN)
+            //    {
+            //        return new VariablePowExpression(leftN.Variable, new NumberExpression(leftN.Exponent.Content.Add(rightN.Content)));
+            //    }
+            //}
+            //{
+            //    if (leftF is VariableExpression leftN && rightF is NumberExpression rightN)
+            //    {
+            //        return new VariablePowExpression(leftN, rightN);
+            //    }
+            //}
+
+            return new OpDivExpression(Left.Format(), Right.Format());
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression);
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression);
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new OpDivExpression(func(Left), func(Right));
         }
     }
 
@@ -454,7 +783,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IValue Evaluate(Environment.Environment environment)
         {
-            int? a;
+            (int Value, bool Precise, bool WithinRange) a;
             if (Exponent.Content is NumberDecimal n)
             {
                 a = n.GetInt();
@@ -467,7 +796,7 @@ namespace kurema.Calc.Helper.Expressions
             {
                 throw new NotImplementedException();
             }
-            if (a.HasValue)
+            if (a.WithinRange)
             {
                 return Variable.Evaluate(environment).Power(a.Value);
             }
@@ -482,6 +811,21 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Format(Environment.Environment environment)
         {
             return this;
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd((TermExpression)this, expression);
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return func(this);
         }
 
         public static implicit operator VariablePowExpression(VariableExpression value)
@@ -540,6 +884,21 @@ namespace kurema.Calc.Helper.Expressions
         {
             return Equals(obj as VariableExpression);
         }
+
+        public IExpression Add(IExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class ArgumentExpression : IExpression
@@ -591,6 +950,26 @@ namespace kurema.Calc.Helper.Expressions
         {
             return new ArgumentExpression(this.Arguments.Select(a => a.Format(environment)).ToArray());
         }
+
+        public ArgumentExpression MemberSelect(Func<IExpression,IExpression> converter)
+        {
+            return new ArgumentExpression(this.Arguments.Select(a => converter(a)).ToArray());
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression);
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return MemberSelect((a) => a.Multiply(expression));
+        }
+
+        IExpression IExpression.MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return MemberSelect(func);
+        }
     }
 
     public class FuncExpression : IExpression
@@ -639,6 +1018,21 @@ namespace kurema.Calc.Helper.Expressions
             {
                 return new FuncExpression(this.Name, args);
             }
+        }
+
+        public IExpression Add(IExpression expression)
+        {
+            return Helper.ExpressionAdd(this, expression);
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return Helper.ExpressionMul(this, expression);
+        }
+
+        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return new FuncExpression(this.Name, func(this.Argument));
         }
     }
 }

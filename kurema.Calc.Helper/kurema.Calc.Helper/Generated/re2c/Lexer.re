@@ -94,6 +94,8 @@ loop:
               OP_SUB      = "-";
               OP_MUL      = "*";
               OP_DIV      = "/";
+			  OP_POW      = "^";
+			  OP_FACT     = "!";
               LP          = "(";
               RP          = ")";
               COMMA       = ",";
@@ -113,7 +115,9 @@ loop:
               OP_SUB        { return Token.OP_SUB;  }
               OP_MUL        { return Token.OP_MUL;  }
               OP_DIV        { return Token.OP_DIV;  }
-              COMMA           { return Token.COMMA;  }
+              OP_POW        { return Token.OP_POW;  }
+              OP_FACT       { return Token.OP_FACT;  }
+			  COMMA         { return Token.COMMA;  }
               LP            { return Token.LP;  }
               RP            { return Token.RP;  }
               NUM           { return Token.NUM;  }

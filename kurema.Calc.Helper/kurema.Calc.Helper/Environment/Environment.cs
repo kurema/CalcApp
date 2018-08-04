@@ -23,7 +23,11 @@ namespace kurema.Calc.Helper.Environment
             }
             catch (Exception e)
             {
+#if DEBUG
+                return e.ToString();
+#else
                 return e.Message;
+#endif
             }
         }
     }
@@ -35,6 +39,7 @@ namespace kurema.Calc.Helper.Environment
             {"sum",Calc.Helper.Environment.Functions.Sum },
             {"prime",Calc.Helper.Environment.Functions.Prime },
             {"fact",Calc.Helper.Environment.Functions.Factorial },
+            { "gcd",Calc.Helper.Environment.Functions.EuclideanAlgorithm},
         };
 
         public Dictionary<string, IExpression> Variables = new Dictionary<string, IExpression>()

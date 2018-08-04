@@ -17,6 +17,8 @@ namespace kurema.Calc.Helper.Interpreter
 %token <string> OP_SUB
 %token <string> OP_MUL
 %token <string> OP_DIV
+%token <string> OP_POW
+%token <string> OP_FACT
 %token <string> NUM
 %token <string> COMMA
 %token <string> KEYWORD
@@ -27,6 +29,7 @@ namespace kurema.Calc.Helper.Interpreter
 %type <IExpression> Formula
 %type <IExpression> Term
 %type <IExpression> Num
+%type <IExpression> Power
 %type <IExpression> Func
 %type <IExpression> Variable
 %type <IExpression> Coefficient
@@ -75,19 +78,19 @@ Formula
   }
 
 Term
-  : Coefficient
+  : Power
   {
     $$ = $1;
   }
-  | Term Coefficient
+  | Term Power
   {
     $$ = new OpMulExpression($1, $2);
   }
-  | Term OP_MUL Coefficient
+  | Term OP_MUL Power
   {
     $$ = new OpMulExpression($1, $3);
   }
-  | Term OP_DIV Coefficient
+  | Term OP_DIV Power
   {
     $$ = new OpDivExpression($1, $3);
   }
@@ -106,6 +109,19 @@ Coefficient
     $$ = $1;
   }
 
+Power
+  : Coefficient OP_POW Coefficient
+  {
+    $$ = new OpPowExpression($1, $3);
+  }
+  | Coefficient
+  {
+    $$ = $1;
+  }
+  | Coefficient OP_FACT
+  {
+    $$ = new OpFactorialExpression($1);
+  }
 
 Num
   : NUM

@@ -35,7 +35,7 @@ namespace kurema.Calc.Helper.Environment
                 if (c is NumberDecimal d)
                 {
                     var cnt = d.GetInt();
-                    if (cnt.HasValue && Consts.Primes.Length>cnt.Value)
+                    if (cnt.WithinRange && Consts.Primes.Length>cnt.Value)
                     {
                         return new NumberExpression(new NumberDecimal(Consts.Primes.Values[cnt.Value], 0));
                     }
@@ -49,13 +49,22 @@ namespace kurema.Calc.Helper.Environment
                   if (c is NumberDecimal d)
                   {
                       var cnt = d.GetInt();
-                      if (cnt.HasValue && Consts.Primes.Length > cnt.Value)
+                      if (cnt.WithinRange && Consts.Primes.Length > cnt.Value)
                       {
                           return new NumberExpression(new NumberDecimal(Consts.Factorials.Values[cnt.Value], 0));
                       }
                   }
                   return null;
               }, "factorial");
+
+        public static IFunction EuclideanAlgorithm =>
+            new FunctionDelegate(2, 2, (a, b) =>
+              {
+                  var aval = b[0].Evaluate(a).GetBigInteger();
+                  var bval = b[1].Evaluate(a).GetBigInteger();
+                  if (!aval.WithinRange || !bval.WithinRange) return null;
+                  return new NumberExpression(new NumberDecimal(MathEx.EuclideanAlgorithm(aval.Value, bval.Value),0));
+              }, "ea");
     }
 
     public class FunctionDelegate : IFunction
