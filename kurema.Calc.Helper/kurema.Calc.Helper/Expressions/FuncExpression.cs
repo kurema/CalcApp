@@ -26,7 +26,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            ArgumentExpression args = this.Argument.Format(environment) as ArgumentExpression;
+            ArgumentExpression args = this.Argument.Format(environment);
             var f = environment.GetFunction(Name);
             if (f != null && args != null && f.CanEvaluate(args.Arguments.Length))
             {

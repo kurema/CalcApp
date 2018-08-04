@@ -16,14 +16,12 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format()
         {
-            //ToDo: fix.
-            return this;
+            return Format(null);
         }
 
         public IExpression Format(Environment.Environment environment)
         {
-            //ToDo: fix.
-            return new OpPowExpression(Base.Format(environment), Exponent.Format(environment));
+            return Base.Format().Power(Exponent.Format());
         }
 
         public override string ToString()

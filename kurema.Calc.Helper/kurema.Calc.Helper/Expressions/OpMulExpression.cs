@@ -24,39 +24,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            var RightF = Right.Format(environment);
-            var LeftF = Left.Format(environment);
-
-            var rn = RightF as NumberExpression;
-            var ln = LeftF as NumberExpression;
-
-            {
-                if (rn != null && ln != null)
-                {
-                    return new NumberExpression(rn.Content.Multiply(ln.Content));
-                }
-                if ((rn != null && rn.Content.Equals(NumberDecimal.Zero)) || (ln != null && ln.Content.Equals(NumberDecimal.Zero)))
-                {
-                    return new NumberExpression(NumberDecimal.Zero);
-                }
-            }
-
-            TermExpression lt = (LeftF as TermExpression) ?? (LeftF as VariableExpression);
-            TermExpression rt = (RightF as TermExpression) ?? (RightF as VariableExpression);
-
-            if (rn != null && lt != null)
-            {
-                return lt.Multiply(rn.Content);
-            }
-            if (ln != null && rt != null)
-            {
-                return rt.Multiply(ln.Content);
-            }
-            if (rt != null && lt != null)
-            {
-                return rt.Multiply(lt);
-            }
-            return new OpMulExpression(LeftF, RightF);
+            return Left.Format().Multiply(Right.Format());
         }
 
         public IExpression Add(IExpression expression)
@@ -69,7 +37,7 @@ namespace kurema.Calc.Helper.Expressions
             return Helper.ExpressionMul(this, expression, () => Left.Multiply(Right).Multiply(expression));
         }
 
-        public IExpression MemberSelect(Func<IExpression, IExpression> func)
+        public OpMulExpression MemberSelect(Func<IExpression, IExpression> func)
         {
             return new OpMulExpression(func(Left), func(Right));
         }
@@ -82,6 +50,11 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression exponent)
         {
             return Helper.ExpressionPower(this, exponent, () => Left.Power(exponent).Multiply(Right.Power(exponent)));
+        }
+
+        IExpression IExpression.MemberSelect(Func<IExpression, IExpression> func)
+        {
+            return MemberSelect(func);
         }
     }
 }

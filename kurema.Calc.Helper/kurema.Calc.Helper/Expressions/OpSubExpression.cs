@@ -24,7 +24,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return new OpAddExpression(Left, GetRightAsMinus()).Format(environment);
+            return Left.Format().Add(Right.Format().Multiply(NumberExpression.MinusOne));
         }
 
         public IExpression GetRightAsMinus()

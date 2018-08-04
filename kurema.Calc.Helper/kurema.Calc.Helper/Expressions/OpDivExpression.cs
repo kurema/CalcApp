@@ -22,19 +22,9 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format() => Format(null);
 
-        public IExpression Format(Environment.Environment environment)
+        public IExpression Format(Environment.Environment e)
         {
-            var leftF = Left.Format();
-            var rightF = Right.Format();
-
-            {
-                if (leftF is NumberExpression leftN && rightF is NumberExpression rightN)
-                {
-                    return new NumberExpression(leftN.Content.Divide(rightN.Content));
-                }
-            }
-
-            return new OpDivExpression(Left.Format(), Right.Format());
+            return Left.Format(e).Multiply(Right.Format(e).Power(NumberExpression.MinusOne));
         }
 
         public IExpression Add(IExpression expression)

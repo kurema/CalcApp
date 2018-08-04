@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using kurema.Calc.Helper.Values;
 
 using System.Linq;
+using kurema.Calc.Helper.Environment;
 
 namespace kurema.Calc.Helper.Expressions
 {
@@ -50,9 +51,9 @@ namespace kurema.Calc.Helper.Expressions
         public IValue Coefficient { get; }
         public VariablePowExpression[] Variables { get; } = new VariablePowExpression[0];
 
-        public IExpression Format() => Format(null);
+        public TermExpression Format() => Format(null);
 
-        public IExpression Format(Environment.Environment environment) => this;
+        public TermExpression Format(Environment.Environment environment) => this;
 
         public static TermExpression AddIfCombinedable(TermExpression a, TermExpression b)
         {
@@ -149,6 +150,16 @@ namespace kurema.Calc.Helper.Expressions
             () => {
                 return new OpPowExpression(this, exponent);
             });
+        }
+
+        IExpression IExpression.Format()
+        {
+            return Format();
+        }
+
+        IExpression IExpression.Format(Environment.Environment environment)
+        {
+            return Format(environment);
         }
 
         public static implicit operator TermExpression(VariablePowExpression value)

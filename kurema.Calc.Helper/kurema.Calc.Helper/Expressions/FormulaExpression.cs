@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using kurema.Calc.Helper.Values;
 
 using System.Linq;
+using kurema.Calc.Helper.Environment;
 
 namespace kurema.Calc.Helper.Expressions
 {
@@ -48,9 +49,9 @@ namespace kurema.Calc.Helper.Expressions
             this.Other = result.Other;
         }
 
-        public IExpression Format(Environment.Environment environment) => Format();
+        public FormulaExpression Format(Environment.Environment environment) => Format();
 
-        public IExpression Format() => this;
+        public FormulaExpression Format() => MemberSelect(a => a.Format());
 
         public FormulaExpression Add(IValue value)
         {
@@ -155,6 +156,16 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression exponent)
         {
             return Helper.ExpressionPower(this, exponent);
+        }
+
+        IExpression IExpression.Format()
+        {
+            return Format();
+        }
+
+        IExpression IExpression.Format(Environment.Environment environment)
+        {
+            return Format(environment);
         }
     }
 }

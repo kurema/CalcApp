@@ -26,7 +26,7 @@ namespace kurema.Calc.Helper.Expressions
                 if (num.WithinRange && num.Precise)
                 {
                     var f = MathEx.Factorial(num.Value);
-                    if (f >= 0) return this;
+                    if (f >= 0) return new NumberExpression(new NumberDecimal(f, 0));
                 }
                 return this;
             }
@@ -37,16 +37,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            var n = N.Format(environment);
-            if (n is NumberExpression number)
-            {
-                var a = number.Content.GetInt();
-                if (a.WithinRange)
-                {
-                    return new NumberExpression(new NumberDecimal(MathEx.Factorial(a.Value), 0));
-                }
-            }
-            return new OpFactorialExpression(n);
+            return GetExpression();
         }
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using kurema.Calc.Helper.Values;
 
 using System.Linq;
+using kurema.Calc.Helper.Environment;
 
 namespace kurema.Calc.Helper.Expressions
 {
@@ -44,11 +45,11 @@ namespace kurema.Calc.Helper.Expressions
             Arguments = arguments ?? new IExpression[0];
         }
 
-        public IExpression Format() => Format(null);
+        public ArgumentExpression Format() => Format(null);
 
-        public IExpression Format(Environment.Environment environment)
+        public ArgumentExpression Format(Environment.Environment environment)
         {
-            return new ArgumentExpression(this.Arguments.Select(a => a.Format(environment)).ToArray());
+            return MemberSelect(a => a.Format(environment));
         }
 
         public ArgumentExpression MemberSelect(Func<IExpression,IExpression> converter)
@@ -61,7 +62,7 @@ namespace kurema.Calc.Helper.Expressions
             return Helper.ExpressionAdd(this, expression);
         }
 
-        public IExpression Multiply(IExpression expression)
+        public ArgumentExpression Multiply(IExpression expression)
         {
             return MemberSelect((a) => a.Multiply(expression));
         }
@@ -74,6 +75,21 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression expression)
         {
             return new OpPowExpression(this, expression);
+        }
+
+        IExpression IExpression.Format()
+        {
+            return Format();
+        }
+
+        IExpression IExpression.Format(Environment.Environment environment)
+        {
+            return Format(environment);
+        }
+
+        IExpression IExpression.Multiply(IExpression expression)
+        {
+            return Multiply(expression);
         }
     }
 }

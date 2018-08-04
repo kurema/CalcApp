@@ -24,28 +24,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            var RightF = Right.Format(environment);
-            var LeftF = Left.Format(environment);
-
-            {
-                if (RightF is NumberExpression r && LeftF is NumberExpression l)
-                {
-                    return new NumberExpression(r.GetNumber().Add(l.GetNumber()));
-                }
-            }
-            {
-                if (RightF is FormulaExpression r)
-                {
-                    return r.Add(Left);
-                }
-            }
-            {
-                if (LeftF is FormulaExpression l)
-                {
-                    return l.Add(Right);
-                }
-            }
-            return new FormulaExpression(Right, Left);
+            return Left.Format(environment).Add(Right.Format(environment));
         }
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)

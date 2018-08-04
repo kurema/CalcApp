@@ -24,7 +24,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return this;
+            return Variable.Format(environment).Power(this.Exponent.Format(environment);
         }
 
         public IExpression Add(IExpression expression)

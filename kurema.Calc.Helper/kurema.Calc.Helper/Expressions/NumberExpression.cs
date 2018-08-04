@@ -1,4 +1,5 @@
 ﻿using System;
+using kurema.Calc.Helper.Environment;
 using kurema.Calc.Helper.Values;
 
 namespace kurema.Calc.Helper.Expressions
@@ -24,7 +25,6 @@ namespace kurema.Calc.Helper.Expressions
                 switch (expression)
                 {
                     case NumberExpression number: return new NumberExpression(this.Content.Add(number.Content));
-                    case ArgumentExpression argument: return argument.MemberSelect(a => a.Add(this));
                     case FormulaExpression formula: return formula.Add(this);
                     default:
                         return new FormulaExpression(expression, this);
@@ -32,12 +32,12 @@ namespace kurema.Calc.Helper.Expressions
             });
         }
 
-        public IExpression Format()
+        public NumberExpression Format()
         {
             return this;
         }
 
-        public IExpression Format(Environment.Environment environment) => Format();
+        public NumberExpression Format(Environment.Environment environment) => Format();
 
         public IValue GetNumber()
         {
@@ -72,6 +72,16 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression exponent)
         {
             return Helper.ExpressionPower(this, exponent, (i) => new NumberExpression(this.Content.Power(i)), () => new OpPowExpression(this, exponent));
+        }
+
+        IExpression IExpression.Format()
+        {
+            return Format();
+        }
+
+        IExpression IExpression.Format(Environment.Environment environment)
+        {
+            return Format(environment);
         }
 
         public static NumberExpression Zero => new NumberExpression(NumberDecimal.Zero);
