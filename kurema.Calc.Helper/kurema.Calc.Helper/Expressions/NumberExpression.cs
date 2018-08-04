@@ -12,6 +12,11 @@ namespace kurema.Calc.Helper.Expressions
 
         public IValue Content { get; }
 
+        public NumberExpression Add(IValue value)
+        {
+            return new NumberExpression(this.Content.Add(value));
+        }
+
         public IExpression Add(IExpression expression)
         {
             return Helper.ExpressionAdd(this, expression, () =>
@@ -67,6 +72,11 @@ namespace kurema.Calc.Helper.Expressions
         public override string ToString()
         {
             return Content.ToString();
+        }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent, (i) => new NumberExpression(this.Content.Power(i)), () => new OpPowExpression(this, exponent));
         }
 
         public static NumberExpression Zero => new NumberExpression(NumberDecimal.Zero);

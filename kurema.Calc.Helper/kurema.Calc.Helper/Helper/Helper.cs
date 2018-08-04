@@ -11,7 +11,7 @@ using kurema.Calc.Helper.Values;
 
 namespace kurema.Calc.Helper
 {
-    public static class Helper
+    public static partial class Helper
     {
         public static List<int> GeneratePrime(int max)
         {
@@ -70,42 +70,5 @@ namespace kurema.Calc.Helper
             }
             return builder.ToString();
         }
-
-        public static IExpression ExpressionMul<T>(T a, IExpression b) where T : IExpression
-        {
-            return ExpressionMul(a, b, () => new OpMulExpression(a, b));
-        }
-
-        public static IExpression ExpressionMul<T>(T a, IExpression b, Func<IExpression> func) where T : IExpression
-        {
-            return ExpressionMul(a, b, (c, d) => func());
-        }
-
-
-        public static IExpression ExpressionMul<T>(T a, IExpression b, Func<T, IExpression, IExpression> func) where T : IExpression
-        {
-            if (a == null || b == null) return null;
-            { if (b is NumberExpression number && number.Content == NumberDecimal.Zero) return NumberExpression.Zero; }
-            { if (b is NumberExpression number && number.Content == NumberDecimal.One) return a; }
-            return func(a, b);
-        }
-
-        public static IExpression ExpressionAdd<T>(T a, IExpression b) where T : IExpression
-        {
-            return ExpressionAdd(a, b, () => new FormulaExpression(a, b));
-        }
-
-        public static IExpression ExpressionAdd<T>(T a, IExpression b, Func<IExpression> func) where T : IExpression
-        {
-            return ExpressionAdd(a, b, (c, d) => func());
-        }
-
-        public static IExpression ExpressionAdd<T>(T a, IExpression b, Func<T, IExpression, IExpression> func) where T : IExpression
-        {
-            if (a == null || b == null) return null;
-            { if (b is NumberExpression number && number.Content == NumberDecimal.Zero) return a; }
-            return func(a, b);
-        }
-
     }
 }

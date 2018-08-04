@@ -50,5 +50,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return Helper.ExpressionMul(this, expression, () => new OpMulExpression(this, expression));
         }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Base.Power(Exponent).Power(exponent);
+        }
     }
 }

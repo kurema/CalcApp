@@ -83,5 +83,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return NumberExpression.MinusOne.Multiply(expression);
         }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent, () => Left.Power(exponent).Multiply(Right.Power(exponent)));
+        }
     }
 }

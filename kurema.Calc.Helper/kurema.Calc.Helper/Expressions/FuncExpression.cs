@@ -67,5 +67,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return new FuncExpression(this.Name, func(this.Argument));
         }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent);
+        }
     }
 }

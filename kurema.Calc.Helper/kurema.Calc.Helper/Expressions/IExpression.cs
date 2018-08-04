@@ -11,6 +11,7 @@ namespace kurema.Calc.Helper.Expressions
 
         IExpression Add(IExpression expression);
         IExpression Multiply(IExpression expression);
+        IExpression Power(IExpression exponent);
 
         IExpression MemberSelect(Func<IExpression, IExpression> func);
     }

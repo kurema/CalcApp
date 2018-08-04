@@ -165,5 +165,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return MemberSelect(func);
         }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent);
+        }
     }
 }

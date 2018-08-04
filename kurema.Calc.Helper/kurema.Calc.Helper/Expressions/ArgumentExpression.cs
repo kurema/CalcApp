@@ -75,5 +75,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return MemberSelect(func);
         }
+
+        public IExpression Power(IExpression expression)
+        {
+            return new OpPowExpression(this, expression);
+        }
     }
 }

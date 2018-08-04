@@ -63,6 +63,11 @@ namespace kurema.Calc.Helper.Expressions
             return Helper.ExpressionMul(this, expression, () => this.MemberSelect(a => a.Multiply(expression)));
         }
 
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent);
+        }
+
         public override string ToString()
         {
             return Left.ToString() + "+" + Right.ToString();

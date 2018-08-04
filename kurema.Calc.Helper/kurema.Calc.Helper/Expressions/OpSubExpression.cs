@@ -47,6 +47,11 @@ namespace kurema.Calc.Helper.Expressions
             return MemberSelect((a) => a.Multiply(expression));
         }
 
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent);
+        }
+
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
         {
             return new OpSubExpression(func(Left), func(Right));

@@ -57,14 +57,36 @@ namespace kurema.Calc.Helper.Expressions
             return Helper.ExpressionAdd((TermExpression)this, expression);
         }
 
-        public IExpression Multiply(IExpression expression)
+        public IExpression Multiply(IExpression expressionBase)
         {
-            throw new NotImplementedException();
+            return Helper.ExpressionMul(this, expressionBase, () =>
+              {
+                  switch (expressionBase)
+                  {
+                      case VariableExpression expression when expression==this.Variable:return new VariablePowExpression(this.Variable, this.Exponent.Add(NumberDecimal.One));
+                      case FormulaExpression expression:return expression.Multiply(this);
+                      case TermExpression expression:return expression.Multiply(this);
+                      default:return new TermExpression(null, this).Multiply(expressionBase);
+                  }
+              });
         }
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
         {
             return func(this);
+        }
+
+        public VariablePowExpression Power(NumberExpression exponent)
+        {
+            return new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Multiply(exponent));
+        }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent,
+                (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Add((NumberExpression)exponent)),
+                (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Add((NumberExpression)exponent)),
+                () => new OpPowExpression(this, exponent));
         }
 
         public static implicit operator VariablePowExpression(VariableExpression value)

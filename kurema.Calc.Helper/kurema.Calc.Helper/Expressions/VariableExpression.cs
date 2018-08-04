@@ -56,7 +56,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Add(IExpression expression)
         {
-            throw new NotImplementedException();
+            return Helper.ExpressionAdd(this, expression);
         }
 
         public IExpression Multiply(IExpression expression)
@@ -66,7 +66,12 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
         {
-            throw new NotImplementedException();
+            return func(this);
+        }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent, (_) => new VariablePowExpression(this, (NumberExpression)exponent), (_) => new VariablePowExpression(this, (NumberExpression)exponent), () => new OpPowExpression(this, exponent));
         }
     }
 }

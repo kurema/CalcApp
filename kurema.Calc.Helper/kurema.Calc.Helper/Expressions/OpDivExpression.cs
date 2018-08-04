@@ -38,19 +38,6 @@ namespace kurema.Calc.Helper.Expressions
                     return new NumberExpression(leftN.Content.Divide(rightN.Content));
                 }
             }
-            //Powerと間違えた。
-            //{
-            //    if (leftF is VariablePowExpression leftN && rightF is NumberExpression rightN)
-            //    {
-            //        return new VariablePowExpression(leftN.Variable, new NumberExpression(leftN.Exponent.Content.Add(rightN.Content)));
-            //    }
-            //}
-            //{
-            //    if (leftF is VariableExpression leftN && rightF is NumberExpression rightN)
-            //    {
-            //        return new VariablePowExpression(leftN, rightN);
-            //    }
-            //}
 
             return new OpDivExpression(Left.Format(), Right.Format());
         }
@@ -63,6 +50,11 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Multiply(IExpression expression)
         {
             return Helper.ExpressionMul(this, expression);
+        }
+
+        public IExpression Power(IExpression exponent)
+        {
+            return Helper.ExpressionPower(this, exponent, () => Left.Power(exponent).Multiply(Right.Power(exponent.Multiply(NumberExpression.MinusOne))));
         }
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
