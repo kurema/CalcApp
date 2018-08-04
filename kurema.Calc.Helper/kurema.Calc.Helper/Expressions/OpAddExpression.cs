@@ -20,11 +20,6 @@ namespace kurema.Calc.Helper.Expressions
             return Helper.ExpressionAdd(this, expression, (a, b) => new FormulaExpression(a.Left, a.Right, b));
         }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            return Left.Evaluate(environment).Add(Right.Evaluate(environment));
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

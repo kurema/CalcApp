@@ -20,31 +20,6 @@ namespace kurema.Calc.Helper.Expressions
         public VariableExpression Variable { get; }
         public NumberExpression Exponent { get; }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            (int Value, bool Precise, bool WithinRange) a;
-            if (Exponent.Content is NumberDecimal n)
-            {
-                a = n.GetInt();
-            }
-            else if (Exponent.Content is NumberRational m)
-            {
-                a = m.GetInt();
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-            if (a.WithinRange)
-            {
-                return Variable.Evaluate(environment).Power(a.Value);
-            }
-            else
-            {
-                throw new NotImplementedException();
-            }
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

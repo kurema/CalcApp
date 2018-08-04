@@ -32,11 +32,6 @@ namespace kurema.Calc.Helper.Expressions
             });
         }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            return Content;
-        }
-
         public IExpression Format()
         {
             return this;

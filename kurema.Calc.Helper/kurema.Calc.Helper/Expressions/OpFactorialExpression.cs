@@ -33,13 +33,6 @@ namespace kurema.Calc.Helper.Expressions
             return this;
         }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            var a = N.Evaluate(environment).GetInt();
-            if (!a.WithinRange) return NumberDecimal.Zero;
-            return new NumberDecimal(MathEx.Factorial(a.Value), 0);
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

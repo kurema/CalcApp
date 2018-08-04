@@ -20,11 +20,6 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Left { get; }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            return Left.Evaluate(environment).Divide(Right.Evaluate(environment));
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

@@ -17,13 +17,6 @@ namespace kurema.Calc.Helper.Expressions
             this.Variable = variable ?? throw new ArgumentNullException(nameof(variable));
         }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            var ex = environment.GetVariable(Variable);
-            if (ex == null) return new NumberDecimal(0);
-            return ex.Evaluate(environment);
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

@@ -48,20 +48,6 @@ namespace kurema.Calc.Helper.Expressions
             this.Other = result.Other;
         }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            IValue result = Value;
-            foreach(var item in Terms)
-            {
-                result = result.Add(item.Evaluate(environment));
-            }
-            foreach (var item in Other)
-            {
-                result = result.Add(item.Evaluate(environment));
-            }
-            return result;
-        }
-
         public IExpression Format(Environment.Environment environment) => Format();
 
         public IExpression Format() => this;

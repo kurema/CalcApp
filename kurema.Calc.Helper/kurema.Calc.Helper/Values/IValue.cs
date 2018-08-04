@@ -13,8 +13,25 @@ namespace kurema.Calc.Helper.Values
         IValue Substract(IValue value);
         IValue Divide(IValue value);
         IValue Power(int y);
-        (int Value, bool Precise,bool WithinRange) GetInt();
-        (BigInteger Value, bool Precise, bool WithinRange) GetBigInteger();
+        ConversionResult<int> GetInt();
+        ConversionResult<BigInteger> GetBigInteger();
         IValue Remainder(IValue value);
+    }
+
+    public struct ConversionResult<T>
+    {
+        public T Value;
+        public bool Precise;
+        public bool WithinRange;
+
+        public ConversionResult(T value, bool precise, bool withinRange)
+        {
+            Value = value;
+            Precise = precise;
+            WithinRange = withinRange;
+        }
+
+        public bool Healthy => Precise && WithinRange;
+        public T HealthyValueOrDefault => this.Healthy ? Value : default(T);
     }
 }

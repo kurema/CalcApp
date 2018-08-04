@@ -5,7 +5,6 @@ namespace kurema.Calc.Helper.Expressions
 {
     public interface IExpression
     {
-        IValue Evaluate(Environment.Environment environment);
         IExpression Format();
         IExpression Format(Environment.Environment environment);
 

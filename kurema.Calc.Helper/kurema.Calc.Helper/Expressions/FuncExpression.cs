@@ -22,19 +22,6 @@ namespace kurema.Calc.Helper.Expressions
         public string Name { get; }
         public ArgumentExpression Argument { get; }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            var f = environment.GetFunction(Name);
-            if(f!=null)
-            {
-                return f.Evaluate(environment, Argument).Evaluate(environment);
-            }
-            else
-            {
-                throw new Exception("Function not exist");
-            }
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

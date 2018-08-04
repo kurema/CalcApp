@@ -44,11 +44,6 @@ namespace kurema.Calc.Helper.Expressions
             Arguments = arguments ?? new IExpression[0];
         }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            return Arguments[0].Evaluate(environment);
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

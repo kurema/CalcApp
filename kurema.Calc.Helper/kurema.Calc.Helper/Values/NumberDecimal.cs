@@ -152,28 +152,28 @@ namespace kurema.Calc.Helper.Values
             }
         }
 
-        public (int Value, bool Precise, bool WithinRange) GetInt()
+        public ConversionResult<int> GetInt()
         {
             var target = this.ShiftExponent(0);
             bool precise = (this.Exponent >= 0);
             if (MathEx.WithinIntRange(target.GetNullable()))
             {
-                return ((int)target.Value, precise, true);
+                return new ConversionResult<int>((int)target.Value, precise, true);
             }
             else
             {
-                return (0, precise, false);
+                return new ConversionResult<int>(0, precise, false);
             }
         }
 
-        public (BigInteger Value, bool Precise, bool WithinRange) GetBigInteger()
+        public ConversionResult<BigInteger> GetBigInteger()
         {
             var target = this.ShiftExponent(0);
             bool precise = (this.Exponent >= 0);
             if (target.HasValue)
-                return (target.Value, precise, true);
+                return new ConversionResult<BigInteger>(target.Value, precise, true);
             else
-                return (0, precise, false);
+                return new ConversionResult<BigInteger>(0, precise, false);
         }
 
 

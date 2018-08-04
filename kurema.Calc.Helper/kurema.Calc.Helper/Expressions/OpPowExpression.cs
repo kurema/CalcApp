@@ -14,11 +14,6 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Base { get; }
         public IExpression Exponent { get; }
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            throw new NotImplementedException();
-        }
-
         public IExpression Format()
         {
             //ToDo: fix.

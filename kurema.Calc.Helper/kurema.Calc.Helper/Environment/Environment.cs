@@ -37,7 +37,7 @@ namespace kurema.Calc.Helper.Environment
         public Dictionary<string, IFunction> Functions = new Dictionary<string, IFunction>() {
             {"rec",Calc.Helper.Environment.Functions.Reciprocal },
             {"sum",Calc.Helper.Environment.Functions.Sum },
-            {"prime",Calc.Helper.Environment.Functions.Prime },
+            {"prime",Calc.Helper.Environment.Functions.PrimeNext },
             {"fact",Calc.Helper.Environment.Functions.Factorial },
             { "gcd",Calc.Helper.Environment.Functions.EuclideanAlgorithm},
         };

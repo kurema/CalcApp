@@ -31,9 +31,9 @@ namespace kurema.Calc.Helper.Values
             return false;
         }
 
-        public (int Value, bool Precise, bool WithinRange) GetInt() => (0, false, false);
+        public ConversionResult<int> GetInt() =>new ConversionResult<int>(0, false, false);
 
-        public (BigInteger Value, bool Precise, bool WithinRange) GetBigInteger() => (0, false, false);
+        public ConversionResult<BigInteger> GetBigInteger() => new ConversionResult<BigInteger>(0, false, false);
 
 
         public static class ErrorValues

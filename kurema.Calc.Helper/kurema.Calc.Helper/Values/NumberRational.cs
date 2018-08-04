@@ -257,21 +257,21 @@ namespace kurema.Calc.Helper.Values
         }
 #endregion
 
-        public (int Value, bool Precise, bool WithinRange) GetInt()
+        public ConversionResult<int> GetInt()
         {
             var result = GetBigInteger();
 
             if (MathEx.WithinIntRange(result.Value))
             {
-                return ((int)result.Value, result.Precise, result.WithinRange);
+                return new ConversionResult<int>((int)result.Value, result.Precise, result.WithinRange);
             }
             else
             {
-                return (0, result.Precise, false);
+                return new ConversionResult<int>(0, result.Precise, false);
             }
         }
 
-        public (BigInteger Value, bool Precise, bool WithinRange) GetBigInteger()
+        public ConversionResult<BigInteger> GetBigInteger()
         {
             if (this.Denominator == 1)
             {
@@ -280,9 +280,9 @@ namespace kurema.Calc.Helper.Values
             else
             {
                 var asBI = new NumberDecimal(this.Numerator, this.Exponent).GetBigInteger();
-                if (!asBI.WithinRange) return (0, false, false);
+                if (!asBI.WithinRange) return new ConversionResult<BigInteger>(0, false, false);
                 var result = asBI.Value / this.Denominator;
-                return (result, false, true);
+                return new ConversionResult<BigInteger>(result, false, true);
             }
         }
 

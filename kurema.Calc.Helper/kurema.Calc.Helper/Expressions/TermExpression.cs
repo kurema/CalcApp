@@ -50,16 +50,6 @@ namespace kurema.Calc.Helper.Expressions
         public IValue Coefficient { get; }
         public VariablePowExpression[] Variables { get; } = new VariablePowExpression[0];
 
-        public IValue Evaluate(Environment.Environment environment)
-        {
-            IValue result = Coefficient;
-            foreach(var item in Variables)
-            {
-                result.Multiply(item.Evaluate(environment));
-            }
-            return result;
-        }
-
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment) => this;
