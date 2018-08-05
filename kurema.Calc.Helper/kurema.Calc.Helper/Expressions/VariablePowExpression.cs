@@ -24,7 +24,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return Variable.Format(environment).Power(this.Exponent.Format(environment);
+            return Variable.Format(environment).Power(this.Exponent.Format(environment));
         }
 
         public IExpression Add(IExpression expression)
@@ -62,6 +62,11 @@ namespace kurema.Calc.Helper.Expressions
                 (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Add((NumberExpression)exponent)),
                 (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Add((NumberExpression)exponent)),
                 () => new OpPowExpression(this, exponent));
+        }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            return this;
         }
 
         public static implicit operator VariablePowExpression(VariableExpression value)

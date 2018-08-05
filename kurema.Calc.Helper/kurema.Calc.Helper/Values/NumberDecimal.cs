@@ -22,7 +22,7 @@ namespace kurema.Calc.Helper.Values
 
         public static (BigInteger significand, BigInteger exponent) FixExponent(BigInteger significand, BigInteger exponent)
         {
-            if (significand == 0) return (significand, exponent);
+            if (significand == 0) return (0, 0);
             while (significand % 10 == 0)
             {
                 significand /= 10;

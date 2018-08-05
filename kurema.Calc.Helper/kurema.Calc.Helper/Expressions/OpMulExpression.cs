@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using kurema.Calc.Helper.Values;
 
 namespace kurema.Calc.Helper.Expressions
@@ -24,7 +25,10 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return Left.Format().Multiply(Right.Format());
+            var leftF = Left.Format(environment);
+            var rightF = Right.Format(environment);
+            return leftF.Multiply(rightF);
+            //return Left.Format(environment).Multiply(Right.Format(environment));
         }
 
         public IExpression Add(IExpression expression)
@@ -55,6 +59,21 @@ namespace kurema.Calc.Helper.Expressions
         IExpression IExpression.MemberSelect(Func<IExpression, IExpression> func)
         {
             return MemberSelect(func);
+        }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            IExpression result = NumberExpression.Zero;
+            var Lefts = Helper.SplitAddition(this.Left);
+            var Rights = Helper.SplitAddition(this.Right);
+            foreach (var item1 in Lefts)
+            {
+                foreach (var item2 in Rights)
+                {
+                    result = result.Add(item1.Multiply(item2));
+                }
+            }
+            return result;
         }
     }
 }

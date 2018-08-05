@@ -253,7 +253,12 @@ namespace kurema.Calc.Helper.Values
 
         public bool Equals(IValue other)
         {
-            return Equals(other);
+            switch (other)
+            {
+                case NumberDecimal number:return Equals(number);
+                case NumberRational number:return Equals(number);
+                default:return Object.Equals(this, other);
+            }
         }
 #endregion
 

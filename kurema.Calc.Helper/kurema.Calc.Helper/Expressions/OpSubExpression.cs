@@ -24,7 +24,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return Left.Format().Add(Right.Format().Multiply(NumberExpression.MinusOne));
+            return Left.Format(environment).Add(Right.Format(environment).Multiply(NumberExpression.MinusOne));
         }
 
         public IExpression GetRightAsMinus()
@@ -50,6 +50,11 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
         {
             return new OpSubExpression(func(Left), func(Right));
+        }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            return MemberSelect(a => a.Expand());
         }
     }
 }

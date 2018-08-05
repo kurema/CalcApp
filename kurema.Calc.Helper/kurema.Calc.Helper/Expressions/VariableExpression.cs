@@ -7,14 +7,14 @@ namespace kurema.Calc.Helper.Expressions
     {
         public override string ToString()
         {
-            return Variable?.ToString();
+            return Name?.ToString();
         }
 
-        public string Variable { get; }
+        public string Name { get; }
 
         public VariableExpression(string variable)
         {
-            this.Variable = variable ?? throw new ArgumentNullException(nameof(variable));
+            this.Name = variable ?? throw new ArgumentNullException(nameof(variable));
         }
 
         public IExpression Format() => Format(null);
@@ -22,14 +22,14 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Format(Environment.Environment environment)
         {
             if (environment == null) return this;
-            var ex = environment.GetVariable(Variable);
+            var ex = environment.GetVariable(Name);
             if (ex == null) return this;
             return ex;
         }
 
         public static bool operator ==(VariableExpression a, VariableExpression b)
         {
-            return a?.Variable == b?.Variable;
+            return a?.Name == b?.Name;
         }
 
         public static bool operator !=(VariableExpression a, VariableExpression b)
@@ -39,12 +39,12 @@ namespace kurema.Calc.Helper.Expressions
 
         public override int GetHashCode()
         {
-            return Variable.GetHashCode();
+            return Name.GetHashCode();
         }
 
         public override bool Equals(object obj)
         {
-            return Equals(obj as VariableExpression);
+            return this == (obj as VariableExpression);
         }
 
         public IExpression Add(IExpression expression)
@@ -54,7 +54,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Multiply(IExpression expression)
         {
-            throw new NotImplementedException();
+            return ((VariablePowExpression)this).Multiply(expression);
         }
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
@@ -65,6 +65,11 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression exponent)
         {
             return Helper.ExpressionPower(this, exponent, (_) => new VariablePowExpression(this, (NumberExpression)exponent), (_) => new VariablePowExpression(this, (NumberExpression)exponent), () => new OpPowExpression(this, exponent));
+        }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            return this;
         }
     }
 }

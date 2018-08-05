@@ -46,5 +46,11 @@ namespace kurema.Calc.Helper.Expressions
         {
             return new OpDivExpression(func(Left), func(Right));
         }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            //ToDo: IMplement;
+            return MemberSelect(a => a.Expand());
+        }
     }
 }

@@ -51,6 +51,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Multiply(IExpression expression)
         {
+            if (this.Content.Equals( NumberDecimal.One)) return expression;
+            if (this.Content.Equals(NumberDecimal.Zero)) return NumberExpression.Zero;
             return Helper.ExpressionMul(this, expression, () =>
             {
                 switch (expression)
@@ -59,7 +61,7 @@ namespace kurema.Calc.Helper.Expressions
                     case ArgumentExpression argument: return argument.MemberSelect(a => a.Multiply(this));
                     case FormulaExpression formula: return formula.Multiply(this);
                     default:
-                        return new FormulaExpression(expression, this);
+                        return new TermExpression(expression, this);
                 }
             });
         }
@@ -83,6 +85,8 @@ namespace kurema.Calc.Helper.Expressions
         {
             return Format(environment);
         }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue) => this;
 
         public static NumberExpression Zero => new NumberExpression(NumberDecimal.Zero);
         public static NumberExpression One => new NumberExpression(NumberDecimal.One);

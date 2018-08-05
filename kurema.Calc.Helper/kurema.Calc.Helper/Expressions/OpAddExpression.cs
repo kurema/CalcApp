@@ -20,6 +20,8 @@ namespace kurema.Calc.Helper.Expressions
             return Helper.ExpressionAdd(this, expression, (a, b) => new FormulaExpression(a.Left, a.Right, b));
         }
 
+        public IExpression Expand(int PowerLevel = int.MaxValue) => new FormulaExpression(Left.Expand(), Right.Expand());
+
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

@@ -7,6 +7,7 @@ namespace kurema.Calc.Helper.Expressions
     {
         IExpression Format();
         IExpression Format(Environment.Environment environment);
+        IExpression Expand(int PowerLevel = int.MaxValue);
 
         IExpression Add(IExpression expression);
         IExpression Multiply(IExpression expression);

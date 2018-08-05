@@ -22,7 +22,6 @@ namespace kurema.Calc.Helper.Expressions
             return string.Join("+", result);
         }
 
-
         public FormulaExpression(IValue value, TermExpression[] terms, IExpression[] other)
         {
             this.Value = value ?? NumberDecimal.Zero;
@@ -101,6 +100,7 @@ namespace kurema.Calc.Helper.Expressions
                 case NumberExpression n:return this.Add(n);
                 case TermExpression n:return this.Add(n);
                 case VariableExpression n:return this.Add(n);
+                case VariablePowExpression n:return this.Add(n);
                 case FormulaExpression n:return this.Add(n);
                 default:
                     var other = this.Other.ToList();
@@ -128,21 +128,22 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Multiply(IExpression expression)
         {
-            { if (expression is NumberExpression number && number.Content == NumberDecimal.Zero) return NumberExpression.Zero; }
-            { if (expression is NumberExpression number && number.Content == NumberDecimal.One) return this; }
+            { if (expression is NumberExpression number && number.Content.Equals(NumberDecimal.Zero)) return NumberExpression.Zero; }
+            { if (expression is NumberExpression number && number.Content.Equals(NumberDecimal.One)) return this; }
             if (expression is NumberExpression n) return Multiply(n.Content);
             return MemberSelect(a => a.Multiply(expression));
         }
 
         public FormulaExpression MemberSelect(Func<IExpression, IExpression> func)
         {
-            return new FormulaExpression(GetMembers().Select(a => func(a)).ToArray());
+            var c = GetMembers().Select(a => func(a)).ToArray();
+            return new FormulaExpression(c);
         }
 
         public IExpression[] GetMembers()
         {
             List<IExpression> expressions = new List<IExpression>();
-            expressions.Add(new NumberExpression(this.Value));
+            if (!this.Value.Equals(NumberDecimal.Zero)) expressions.Add(new NumberExpression(this.Value));
             expressions.AddRange(this.Terms);
             expressions.AddRange(this.Other);
             return expressions.ToArray();
@@ -166,6 +167,11 @@ namespace kurema.Calc.Helper.Expressions
         IExpression IExpression.Format(Environment.Environment environment)
         {
             return Format(environment);
+        }
+
+        public IExpression Expand(int PowerLevel = 3)
+        {
+            return MemberSelect(a => a.Expand());
         }
     }
 }

@@ -70,5 +70,23 @@ namespace kurema.Calc.Helper
             }
             return builder.ToString();
         }
+
+        public static IExpression[] SplitAddition(IExpression expression)
+        {
+            switch (expression)
+            {
+                case OpAddExpression ex: return new IExpression[] { ex.Left, ex.Right };
+                case OpSubExpression ex: return new IExpression[] { ex.Left, ex.Right.Multiply(NumberExpression.MinusOne) };
+                case FormulaExpression ex: return ex.GetMembers();
+                default: return new[] { expression };
+            }
+        }
+
+        public static IValue GetExpressionValue(IExpression expression)
+        {
+            var result = expression.Format();
+            if (result is NumberExpression ne) return ne.Content;
+            return null;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using kurema.Calc.Helper.Values;
 
 namespace kurema.Calc.Helper.Expressions
@@ -21,7 +22,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
-            return Base.Format().Power(Exponent.Format());
+            return Base.Format(environment).Power(Exponent.Format(environment));
         }
 
         public override string ToString()
@@ -47,6 +48,37 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression exponent)
         {
             return Base.Power(Exponent).Power(exponent);
+        }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            var cnt = Helper.GetExpressionValue(this.Exponent)?.GetInt();
+            var splited = Helper.SplitAddition(this.Base).Select(a => a.Expand()).ToArray();
+            var minusPowerLevel = PowerLevel == int.MaxValue ? int.MinValue : -PowerLevel;
+            if (splited.Length == 1)
+            {
+                return splited[0].Power(this.Exponent);
+            }
+            if (cnt?.Healthy == true)
+            {
+                if (cnt.Value.Value == 0) { return this.Base; }
+                if (cnt.Value.Value > 0 && cnt.Value.Value < PowerLevel) { return ExpandLevel(splited, cnt.Value.Value); }
+                if (cnt.Value.Value < 0 && cnt.Value.Value > -PowerLevel) { return ExpandLevel(splited, -cnt.Value.Value).Power(NumberExpression.MinusOne); }
+            }
+            return MemberSelect(a => a.Expand());
+        }
+
+        public IExpression ExpandLevel(IExpression[] expressions,int currentLevel,IExpression current=null)
+        {
+            current = current ?? NumberExpression.One;
+            IExpression result = NumberExpression.Zero;
+            // This is not smart.
+            if (currentLevel == 0) return current;
+            foreach(var item in expressions)
+            {
+                result = result.Add(ExpandLevel(expressions, currentLevel - 1, current.Multiply(item)));
+            }
+            return result;
         }
     }
 }

@@ -59,5 +59,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return Helper.ExpressionPower(this, exponent);
         }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            return MemberSelect(a => a.Format());
+        }
     }
 }

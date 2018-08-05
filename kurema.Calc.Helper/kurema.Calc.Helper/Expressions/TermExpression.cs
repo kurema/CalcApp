@@ -14,7 +14,8 @@ namespace kurema.Calc.Helper.Expressions
             var result = new List<string>();
             if (!Coefficient.Equals(NumberDecimal.One)) result.Add(Coefficient.ToString());
             result.AddRange(Variables.Select(a => a.ToString()));
-            return string.Join("", result);
+            result.AddRange(Others.Select(a =>"("+ a.ToString()+")"));
+            return string.Join("*", result);
         }
 
         public TermExpression(IValue coefficient, params VariablePowExpression[] variables) : this(coefficient, variables, null)
@@ -25,31 +26,72 @@ namespace kurema.Calc.Helper.Expressions
         {
         }
 
-        public TermExpression(IValue coefficient,  VariablePowExpression[] variablePows, VariableExpression[] variables)
+        public TermExpression(IValue coefficient,  VariablePowExpression[] variablePows, VariableExpression[] variables,params IExpression[] others)
         {
             Coefficient = coefficient ?? new NumberDecimal(1, 0);
-            var vars = new Dictionary<VariableExpression,NumberExpression>();
-            if (variables != null)
+            var variablesR = TermExpression.Multiply(variablePows, variables?.Select(a => (VariablePowExpression)a))?.ToList();
+            var othersR = new List<IExpression>();
+
+            if (others != null)
             {
-                foreach (var item in variables)
+                var result = new TermExpression(others);
+                Coefficient = Coefficient.Multiply(result.Coefficient);
+                variablesR.AddRange(result.Variables);
+                othersR.AddRange(result.Others);
+            }
+
+            Variables = Unify(variablesR);
+            Others = othersR.ToArray();
+        }
+
+        public TermExpression(params IExpression[] exs)
+        {
+            IValue coefficientR = NumberDecimal.One;
+            var variablesR = new List<VariablePowExpression>();
+            var othersR = new List<IExpression>();
+
+            foreach (var ex in exs)
+            {
+                switch (ex)
                 {
-                    if (vars.ContainsKey(item)) vars[item].Add(NumberDecimal.One);
-                    else vars.Add(item, NumberExpression.One);
+                    case NumberExpression expression: coefficientR = coefficientR.Multiply(expression.Content); break;
+                    case VariablePowExpression expression: variablesR.Add(expression); break;
+                    case VariableExpression expression: variablesR.Add(expression); break;
+                    case TermExpression expression:
+                        {
+                            coefficientR.Multiply(expression.Coefficient);
+                            if (expression.Variables != null) variablesR.AddRange(expression.Variables);
+                            if (expression.Others != null) othersR.AddRange(expression.Others);
+                            break;
+                        }
+                    case OpMulExpression expression:
+                        {
+                            var result = new TermExpression(expression.Left, expression.Right);
+                            coefficientR.Multiply(result.Coefficient);
+                            variablesR.AddRange(result.Variables);
+                            othersR.AddRange(result.Others);
+                            break;
+                        }
+                    case OpDivExpression expression:
+                        {
+                            var result = new TermExpression(expression.Left, expression.Right.Power(NumberExpression.MinusOne));
+                            coefficientR.Multiply(result.Coefficient);
+                            variablesR.AddRange(result.Variables);
+                            othersR.AddRange(result.Others);
+                            break;
+                        }
+                    default: othersR.Add(ex);break;
                 }
             }
-            if (variablePows != null)
-            {
-                foreach (var item in variablePows)
-                {
-                    if (vars.ContainsKey(item.Variable)) vars[item.Variable].Add(item.Exponent);
-                    else vars.Add(item.Variable, item.Exponent);
-                }
-            }
-            Variables = vars.Select(a => new VariablePowExpression(a.Key, a.Value))?.OrderBy(a => a.Variable.Variable)?.ToArray() ?? new VariablePowExpression[0];
+
+            this.Coefficient = coefficientR;
+            this.Variables = Unify(variablesR.ToArray());
+            this.Others = othersR.ToArray();
         }
 
         public IValue Coefficient { get; }
         public VariablePowExpression[] Variables { get; } = new VariablePowExpression[0];
+        public IExpression[] Others = new IExpression[0];
 
         public TermExpression Format() => Format(null);
 
@@ -60,7 +102,7 @@ namespace kurema.Calc.Helper.Expressions
             if (a.Variables.Count() != b.Variables.Count()) return null;
             for(int i = 0; i < a.Variables.Count(); i++)
             {
-                if (a.Variables[i].Variable.Variable != b.Variables[i].Variable.Variable) return null;
+                if (a.Variables[i].Variable.Name != b.Variables[i].Variable.Name) return null;
                 if (!a.Variables[i].Exponent.Content.Equals( b.Variables[i].Exponent.Content)) return null;
             }
             return new TermExpression(a.Coefficient.Add(b.Coefficient), a.Variables);
@@ -69,12 +111,7 @@ namespace kurema.Calc.Helper.Expressions
 
         public TermExpression Multiply(TermExpression value)
         {
-            var result = this.Multiply(value.Coefficient);
-            foreach (var item in value.Variables)
-            {
-                result = result.Multiply(item);
-            }
-            return result;
+            return new TermExpression(this, value);
         }
 
         public TermExpression Multiply(IValue value)
@@ -84,67 +121,60 @@ namespace kurema.Calc.Helper.Expressions
 
         public TermExpression Multiply(params VariablePowExpression[] values)
         {
-            var result = this.Variables.ToList();
-            foreach (var value in values)
+            return new TermExpression(this.Coefficient, Multiply(this.Variables, values).ToArray());
+        }
+
+        public static VariablePowExpression[] Unify(IEnumerable<VariablePowExpression> a)
+        {
+            if (a == null) return new VariablePowExpression[0];
+            var result = new Dictionary<VariableExpression, IValue>();
+            foreach(var item in a)
             {
-                if (result.Count(a => a.Variable.Variable == value.Variable.Variable) == 0)
+                if (result.ContainsKey(item.Variable))
                 {
-                    result.Add(value);
+                    result[item.Variable] = result[item.Variable].Add(item.Exponent.Content);
                 }
                 else
                 {
-                    result = result
-                        .Select(a => a.Variable.Variable != value.Variable.Variable ? a :
-                            new VariablePowExpression(a.Variable, new NumberExpression(a.Exponent.Content.Add(value.Exponent.Content)))
-                    ).ToList();
+                    result.Add(item.Variable, item.Exponent.Content);
                 }
             }
-            return new TermExpression(this.Coefficient, result.ToArray());
+            return result.Select(r => new VariablePowExpression(r.Key, new NumberExpression(r.Value))).OrderBy(x=>x.Variable.Name).ToArray();
+        }
+
+        public static VariablePowExpression[] Multiply(params IEnumerable<VariablePowExpression>[] vars)
+        {
+            return Unify(vars?.Where(a => a != null)?.SelectMany(a => a));
         }
 
         public IExpression Add(IExpression expression)
         {
-            return Helper.ExpressionAdd(this, expression, () => new OpAddExpression(this, expression));
+            return Helper.ExpressionAdd(this, expression, () => new FormulaExpression(this, expression));
         }
 
-        public IExpression Multiply(IExpression ex)
+        public TermExpression Multiply(params IExpression[] exs)
         {
-            return Helper.ExpressionMul(this, ex, ()=>{
-                switch (ex)
-                {
-                    case NumberExpression expression: return new TermExpression(this.Coefficient.Multiply(expression.Content), this.Variables);
-                    case VariablePowExpression expression: return this.Multiply(expression);
-                    case VariableExpression expression: return this.Multiply(new VariablePowExpression(expression));
-                    case TermExpression expression:
-                        {
-                            var result = this.Multiply(expression.Coefficient);
-                            return result.Multiply(expression.Variables);
-                        }
-                    default: return new OpMulExpression(this, ex);
-                }
-            });
+            return new TermExpression(exs.Concat(new IExpression[] { this }).ToArray());
         }
-
 
         public IExpression MemberSelect(Func<IExpression, IExpression> func)
         {
             return func(this);
         }
 
-        public TermExpression MemberSelecVariable(Func<VariablePowExpression, VariablePowExpression> func)
+        public TermExpression MemberSelectVariable(Func<VariablePowExpression, VariablePowExpression> func)
         {
-            return new TermExpression(this.Coefficient, this.Variables.Select(a => func(a)).ToArray());
+            return new TermExpression(this.Coefficient, this.Variables.Select(a => func(a)).ToArray(), null, this.Others);
         }
-
 
         public IExpression Power(IExpression exponent)
         {
             return Helper.ExpressionPower(this, exponent, (i) =>
             {
                 return new TermExpression(this.Coefficient.Power(i),
-                    this.MemberSelecVariable(a => new VariablePowExpression(a.Variable, (NumberExpression)a.Exponent.Multiply((NumberExpression)exponent))).Variables);
+                    this.MemberSelectVariable(a => new VariablePowExpression(a.Variable, (NumberExpression)a.Exponent.Multiply((NumberExpression)exponent))).Variables);
             }, (n) => {
-                return new TermExpression(NumberDecimal.One,this.MemberSelecVariable(a => new VariablePowExpression(a.Variable, new NumberExpression(a.Exponent.Content.Multiply(n)))).Variables)
+                return new TermExpression(NumberDecimal.One,this.MemberSelectVariable(a => new VariablePowExpression(a.Variable, new NumberExpression(a.Exponent.Content.Multiply(n)))).Variables)
                 .Multiply(new NumberExpression(this.Coefficient).Power(exponent));
             },
             () => {
@@ -160,6 +190,16 @@ namespace kurema.Calc.Helper.Expressions
         IExpression IExpression.Format(Environment.Environment environment)
         {
             return Format(environment);
+        }
+
+        public IExpression Expand(int PowerLevel = int.MaxValue)
+        {
+            return new TermExpression(this.Coefficient, this.Variables, null, this.Others.Select(a => a.Expand()).ToArray());
+        }
+
+        public IExpression Multiply(IExpression expression)
+        {
+            return new TermExpression(this, expression);
         }
 
         public static implicit operator TermExpression(VariablePowExpression value)

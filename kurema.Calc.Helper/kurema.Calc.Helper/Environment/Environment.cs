@@ -18,7 +18,8 @@ namespace kurema.Calc.Helper.Environment
                 var parser = new Parser();
                 var expression = (IExpression)parser.yyparse(lexer);
                 var formated = expression.Format(environment);
-                return formated.ToString();
+                var expand = formated.Expand();
+                return expand.ToString();
                 //return expression.Evaluate(environment).ToString();
             }
             catch (Exception e)
