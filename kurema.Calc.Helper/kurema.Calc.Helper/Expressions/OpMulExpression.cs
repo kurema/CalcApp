@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using kurema.Calc.Helper.Values;
 
+using System.Linq;
+
 namespace kurema.Calc.Helper.Expressions
 {
     public class OpMulExpression : IExpression
@@ -20,6 +22,8 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Right { get; }
 
         public IExpression Left { get; }
+
+        public bool IsZero => Left.IsZero || Right.IsZero;
 
         public IExpression Format() => Format(null);
 
@@ -64,8 +68,8 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Expand(int PowerLevel = int.MaxValue)
         {
             IExpression result = NumberExpression.Zero;
-            var Lefts = Helper.SplitAddition(this.Left);
-            var Rights = Helper.SplitAddition(this.Right);
+            var Lefts = Helper.SplitAddition(this.Left.Expand()).Select(a=>a.Expand()).ToArray();
+            var Rights = Helper.SplitAddition(this.Right.Expand()).Select(a => a.Expand()).ToArray();
             foreach (var item1 in Lefts)
             {
                 foreach (var item2 in Rights)

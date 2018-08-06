@@ -22,6 +22,8 @@ namespace kurema.Calc.Helper.Expressions
         public string Name { get; }
         public ArgumentExpression Argument { get; }
 
+        public bool IsZero => false;
+
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)

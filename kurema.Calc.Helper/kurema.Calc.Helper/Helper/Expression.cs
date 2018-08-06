@@ -27,8 +27,8 @@ namespace kurema.Calc.Helper
         public static IExpression ExpressionMul<T>(T a, IExpression b, Func<T, IExpression, IExpression> func) where T : IExpression
         {
             if (a == null || b == null) return null;
-            { if (b is NumberExpression number && number.Content == NumberDecimal.Zero) return NumberExpression.Zero; }
-            { if (b is NumberExpression number && number.Content == NumberDecimal.One) return a; }
+            if (a.IsZero || b.IsZero) return NumberExpression.Zero;
+            { if (b is NumberExpression number && number.Content.Equals(NumberDecimal.One)) return a; }
             return func(a, b);
         }
 
@@ -45,7 +45,9 @@ namespace kurema.Calc.Helper
         public static IExpression ExpressionAdd<T>(T a, IExpression b, Func<T, IExpression, IExpression> func) where T : IExpression
         {
             if (a == null || b == null) return null;
-            { if (b is NumberExpression number && number.Content == NumberDecimal.Zero) return a; }
+            if (a.IsZero && b.IsZero) return NumberExpression.Zero;
+            if (a.IsZero) return b;
+            if (b.IsZero) return a;
             return func(a, b);
         }
 
@@ -73,10 +75,11 @@ namespace kurema.Calc.Helper
 
         private static IExpression ExpressionPowerIValue<T>(T a, IExpression b, Func<IValue, IExpression> CaseValue, Func<IExpression> CaseOther) where T : IExpression
         {
+            if(b.IsZero)return NumberExpression.One;
             if (b is NumberExpression num)
             {
-                if (num.Content == NumberDecimal.One) return a;
-                if (num.Content == NumberDecimal.Zero) return NumberExpression.One;
+                if (num.Content.Equals(NumberDecimal.One)) return a;
+                //if (num.Content.Equals(NumberDecimal.Zero)) return NumberExpression.One;
                 return CaseValue(num.Content);
             }
             else

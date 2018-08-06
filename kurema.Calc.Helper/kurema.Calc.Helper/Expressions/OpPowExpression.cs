@@ -15,6 +15,8 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Base { get; }
         public IExpression Exponent { get; }
 
+        public bool IsZero => Base.IsZero;
+
         public IExpression Format()
         {
             return Format(null);
@@ -62,21 +64,22 @@ namespace kurema.Calc.Helper.Expressions
             if (cnt?.Healthy == true)
             {
                 if (cnt.Value.Value == 0) { return this.Base; }
-                if (cnt.Value.Value > 0 && cnt.Value.Value < PowerLevel) { return ExpandLevel(splited, cnt.Value.Value); }
-                if (cnt.Value.Value < 0 && cnt.Value.Value > -PowerLevel) { return ExpandLevel(splited, -cnt.Value.Value).Power(NumberExpression.MinusOne); }
+                if (cnt.Value.Value > 0 && cnt.Value.Value < PowerLevel) { return new Helper.PowerPermulation(splited.Length, cnt.Value.Value).GetExpression(splited).Expand(); }
+                if (cnt.Value.Value < 0 && cnt.Value.Value > -PowerLevel) { return new Helper.PowerPermulation(splited.Length, -cnt.Value.Value).GetExpression(splited).Expand().Power(NumberExpression.MinusOne); }
             }
             return MemberSelect(a => a.Expand());
         }
 
-        public IExpression ExpandLevel(IExpression[] expressions,int currentLevel,IExpression current=null)
+        public static IExpression ExpandLevel(IExpression[] expressions,int currentLevel,IExpression current=null)
         {
             current = current ?? NumberExpression.One;
             IExpression result = NumberExpression.Zero;
-            // This is not smart.
             if (currentLevel == 0) return current;
             foreach(var item in expressions)
             {
-                result = result.Add(ExpandLevel(expressions, currentLevel - 1, current.Multiply(item)));
+                var test = ExpandLevel(expressions, currentLevel - 1, current.Multiply(item));
+                //Console.WriteLine($"{ currentLevel } {current} ({current}) * ({item}) = ({current.Multiply(item)}) { test } {result } {result.GetType() } { test.GetType() }");
+                result = result.Add(test);
             }
             return result;
         }

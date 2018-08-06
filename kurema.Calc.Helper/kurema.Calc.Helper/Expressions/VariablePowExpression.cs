@@ -20,10 +20,14 @@ namespace kurema.Calc.Helper.Expressions
         public VariableExpression Variable { get; }
         public NumberExpression Exponent { get; }
 
+        public bool IsZero => Variable.IsZero;
+
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment environment)
         {
+            if (this.Exponent.Content.Equals(NumberDecimal.Zero)) return NumberExpression.One;
+            else if (this.Exponent.Content.Equals(NumberDecimal.One)) return this.Variable;
             return Variable.Format(environment).Power(this.Exponent.Format(environment));
         }
 
@@ -59,8 +63,8 @@ namespace kurema.Calc.Helper.Expressions
         public IExpression Power(IExpression exponent)
         {
             return Helper.ExpressionPower(this, exponent,
-                (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Add((NumberExpression)exponent)),
-                (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Add((NumberExpression)exponent)),
+                (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Multiply((NumberExpression)exponent)),
+                (_) => new VariablePowExpression(this.Variable, (NumberExpression)this.Exponent.Multiply((NumberExpression)exponent)),
                 () => new OpPowExpression(this, exponent));
         }
 

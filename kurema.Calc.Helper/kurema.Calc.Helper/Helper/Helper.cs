@@ -8,6 +8,7 @@ using System.Numerics;
 
 using kurema.Calc.Helper.Expressions;
 using kurema.Calc.Helper.Values;
+using System.Collections;
 
 namespace kurema.Calc.Helper
 {
@@ -87,6 +88,100 @@ namespace kurema.Calc.Helper
             var result = expression.Format();
             if (result is NumberExpression ne) return ne.Content;
             return null;
+        }
+
+        public class PowerPermulation : IEnumerable<PowerPermulation.TermStatus>
+        {
+            public PowerPermulation(int members, int exponent)
+            {
+                Members = members;
+                Exponent = exponent;
+            }
+
+            public int Members { get; }
+            public int Exponent { get; }
+
+            public IEnumerator<TermStatus> GetEnumerator()
+            {
+                if (Members <= 0) yield break;
+                if (Members == 1)
+                {
+                    yield return new TermStatus(1, Exponent);
+                    yield break;
+                }
+                if (Exponent < 0) yield break;
+                var status = new int[Members - 1];
+                int sum = 0;
+                while (true)
+                {
+                    foreach(var item in new PowerPermulation(Members - 1, sum))
+                    {
+                        yield return TermStatus.FromStatus(item.Exponents,this.Exponent);
+                    }
+                    sum++;
+                    if (sum > Exponent) yield break;
+                }
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public IExpression GetExpression(IExpression[] expressions)
+            {
+                if (Members != expressions.Count()) throw new ArgumentException();
+                var powers = new IExpression[Members, Exponent + 1];
+
+                for(int i = 0; i < Members; i++) 
+                {
+                    for(int j = 0; j < Exponent+1; j++)
+                    {
+                        powers[i, j] = expressions[Members - i - 1].Power(new NumberExpression(new NumberDecimal(j, 0))).Format().Expand();
+                    }
+                }
+
+                IExpression result = NumberExpression.Zero;
+
+                foreach( var item in this)
+                {
+                    IExpression term = new NumberExpression(new NumberDecimal(item.Coefficient, 0));
+                    for(int i=0;i<item.Exponents.Count();i++)
+                    {
+                        term = term.Multiply(powers[i, item.Exponents[i]]).Format().Expand();
+                    }
+                    result = result.Add(term);
+                }
+                return result.Format().Expand();
+            }
+
+            public struct TermStatus
+            {
+                public BigInteger Coefficient;
+                public int[] Exponents;
+
+                public TermStatus(BigInteger coefficient, params int[] powers)
+                {
+                    Coefficient = coefficient;
+                    Exponents = powers ?? throw new ArgumentNullException(nameof(powers));
+                }
+
+                public static TermStatus FromStatus(int[] status,int power)
+                {
+                    var result = new int[status.Length + 1];
+
+                    BigInteger coef = 1;
+                    int currentLeft = power;
+                    for(int i = 0; i < status.Count(); i++)
+                    {
+                        coef *= MathEx.BinomialCoefficients(currentLeft, status[i]);
+                        result[i] = status[i];
+                        currentLeft -= status[i];
+                    }
+                    result[status.Length] = currentLeft;
+                    return new TermStatus(coef, result);
+                }
+            }
         }
     }
 }

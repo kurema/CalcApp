@@ -16,6 +16,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression[] Arguments { get; }
 
+        public bool IsZero => false;
+
         public ArgumentExpression(IExpression left, IExpression right)
         {
             left = left ?? throw new ArgumentNullException(nameof(left));

@@ -20,6 +20,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Left { get; }
 
+        public bool IsZero => Left.IsZero;
+
         public IExpression Format() => Format(null);
 
         public IExpression Format(Environment.Environment e)

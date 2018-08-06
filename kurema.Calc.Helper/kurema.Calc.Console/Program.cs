@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Numerics;
+
+using System.Linq;
+
 namespace kurema.Calc.CUI
 {
     class Program
@@ -31,6 +34,12 @@ namespace kurema.Calc.CUI
             //    var b = int.Parse(Console.ReadLine());
             //    Console.WriteLine(String.Format("{0}P{1} ",a,b)+Helper.MathEx.FactorialPower(a, b));
             //    Console.WriteLine(String.Format("{0}C{1} ", a, b) + Helper.MathEx.BinomialCoefficients(a, b));
+            //}
+
+            //var perm = new Helper.Helper.PowerPermulation(3, 3);
+            //foreach(var item in perm)
+            //{
+            //    Console.WriteLine(item.Coefficient + " * " + String.Join(' ', item.Exponents.Select(a => a.ToString())));
             //}
 
             while (true)

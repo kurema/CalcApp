@@ -14,5 +14,7 @@ namespace kurema.Calc.Helper.Expressions
         IExpression Power(IExpression exponent);
 
         IExpression MemberSelect(Func<IExpression, IExpression> func);
+
+        bool IsZero { get; }
     }
 }

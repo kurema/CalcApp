@@ -15,6 +15,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Left { get; }
 
+        public bool IsZero => Left.IsZero && Right.IsZero;
+
         public IExpression Add(IExpression expression)
         {
             return Helper.ExpressionAdd(this, expression, (a, b) => new FormulaExpression(a.Left, a.Right, b));
@@ -36,7 +38,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Multiply(IExpression expression)
         {
-            return Helper.ExpressionMul(this, expression, () => this.MemberSelect(a => a.Multiply(expression)));
+            //return Helper.ExpressionMul(this, expression, () => this.MemberSelect(a => a.Multiply(expression)));
+            return Helper.ExpressionMul(new FormulaExpression(Left, Right), expression );
         }
 
         public IExpression Power(IExpression exponent)

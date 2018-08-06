@@ -12,6 +12,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public string Name { get; }
 
+        public bool IsZero => false;
+
         public VariableExpression(string variable)
         {
             this.Name = variable ?? throw new ArgumentNullException(nameof(variable));

@@ -14,12 +14,16 @@ namespace kurema.Calc.Helper.Environment
         {
             try
             {
+                StringBuilder sb = new StringBuilder();
                 var lexer = new Lexer(script,environment);
                 var parser = new Parser();
                 var expression = (IExpression)parser.yyparse(lexer);
                 var formated = expression.Format(environment);
                 var expand = formated.Expand();
-                return expand.ToString();
+
+                sb.AppendLine(formated.ToString());
+                sb.Append(expand.ToString());
+                return sb.ToString();
                 //return expression.Evaluate(environment).ToString();
             }
             catch (Exception e)

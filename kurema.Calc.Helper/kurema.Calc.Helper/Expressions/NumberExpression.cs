@@ -91,5 +91,7 @@ namespace kurema.Calc.Helper.Expressions
         public static NumberExpression Zero => new NumberExpression(NumberDecimal.Zero);
         public static NumberExpression One => new NumberExpression(NumberDecimal.One);
         public static NumberExpression MinusOne => new NumberExpression(NumberDecimal.MinusOne);
+
+        public bool IsZero => this.Content.Equals(NumberDecimal.Zero);
     }
 }

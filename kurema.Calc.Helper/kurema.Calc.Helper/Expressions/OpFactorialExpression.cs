@@ -12,6 +12,8 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression N { get; }
 
+        public bool IsZero => false;
+
         public IExpression Add(IExpression expression)
         {
             return Helper.ExpressionAdd(this, expression, () => GetExpression().Add(expression));
