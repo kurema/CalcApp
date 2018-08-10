@@ -14,28 +14,29 @@ namespace kurema.Calc.Helper.Environment
     {
         IExpression Evaluate(Environment environment, params IExpression[] expressions);
         bool CanEvaluate(int argCount);
+        IExpression Discreate(params IExpression[] expressions);
     }
 
     public static class Functions
     {
         public static IFunction Reciprocal =>
-            new FunctionExpressionDelegate(1, 1, (a, b) => new OpDivExpression(new NumberExpression(new NumberDecimal(1)), b[0]));
+            new FunctionExpressionDelegate(1, 1, (a, b) => new OpDivExpression(new NumberExpression(new NumberDecimal(1)), b[0]), null);
         public static IFunction Sum =>
             new FunctionExpressionDelegate(0, int.MaxValue, (a, b) => {
                 return new FormulaExpression(b);
-            });
+            }, null);
         public static IFunction PrimeNext =>
             new FunctionIValueDelegate(1, 1, (a, b) =>
             {
                 var cnt = b?[0]?.GetInt();
                 return cnt?.Healthy == true ? new NumberExpression(new NumberDecimal(MathEx.PrimeNext(cnt.Value.Value), 0)):null;
-            });
+            }, null);
         public static IFunction Factorial =>
             new FunctionIValueDelegate(1, 1, (a, b) =>
               {
                   var cnt = b?[0]?.GetInt();
                   return cnt?.Healthy == true ? new NumberExpression(new NumberDecimal(MathEx.Factorial(cnt.Value.Value), 0)) : null;
-              });
+              },null);
 
         public static IFunction EuclideanAlgorithm =>
             new FunctionIValueDelegate(2, 2, (a, b) =>
@@ -44,21 +45,26 @@ namespace kurema.Calc.Helper.Environment
                   var bval = b?[1]?.GetBigInteger();
                   if (!(aval?.WithinRange ?? false) || !(bval?.WithinRange ?? false)) return null;
                   return new NumberExpression(new NumberDecimal(MathEx.EuclideanAlgorithm(aval.Value.Value, bval.Value.Value),0));
-              });
+              },null);
     }
 
     public class FunctionExpressionDelegate : IFunction
     {
         public readonly FunctionDelegate<IExpression> Content;
 
-        public FunctionExpressionDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, Expressions.IExpression[], IExpression> content)
+        public FunctionExpressionDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, Expressions.IExpression[], IExpression> content, Func<IExpression[], IExpression> contentDifferentiate)
         {
-            Content = new FunctionDelegate<IExpression>(argumentCountMinimum, argumentCountMaximum, content, (e, a) => a);
+            Content = new FunctionDelegate<IExpression>(argumentCountMinimum, argumentCountMaximum, content, (e, a) => a, contentDifferentiate);
         }
 
         public bool CanEvaluate(int argCount)
         {
             return Content.CanEvaluate(argCount);
+        }
+
+        public IExpression Discreate(params IExpression[] expressions)
+        {
+            return Content.Discreate(expressions);
         }
 
         public IExpression Evaluate(Environment environment, params IExpression[] expressions)
@@ -71,17 +77,22 @@ namespace kurema.Calc.Helper.Environment
     {
         public readonly FunctionDelegate<IValue> Content;
 
-        public FunctionIValueDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, IValue[], IExpression> content)
+        public FunctionIValueDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, IValue[], IExpression> content, Func<IExpression[], IExpression> contentDifferentiate)
         {
             Content = new FunctionDelegate<IValue>(argumentCountMinimum, argumentCountMaximum, content, (e, a) =>
             {
                 return (a?.Format(e) as NumberExpression)?.Content;
-            });
+            }, contentDifferentiate);
         }
 
         public bool CanEvaluate(int argCount)
         {
             return Content.CanEvaluate(argCount);
+        }
+
+        public IExpression Discreate(params IExpression[] expressions)
+        {
+            return Content.Discreate(expressions);
         }
 
         public IExpression Evaluate(Environment environment, params IExpression[] expressions)
@@ -96,19 +107,26 @@ namespace kurema.Calc.Helper.Environment
         public readonly int ArgumentCountMaximum;
         public readonly Func<Environment, T[], IExpression> Content;
         public readonly Func<Environment, IExpression, T> Converter;
+        public readonly Func<IExpression[], IExpression> ContentDifferentiate;
 
-        public FunctionDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, T[], IExpression> content, Func<Environment, IExpression, T> converter)
+        public FunctionDelegate(int argumentCountMinimum, int argumentCountMaximum, Func<Environment, T[], IExpression> content, Func<Environment, IExpression, T> converter, Func<IExpression[], IExpression> contentDifferentiate)
         {
             ArgumentCountMinimum = Math.Min(argumentCountMinimum, argumentCountMaximum);
             ArgumentCountMaximum = Math.Max(argumentCountMinimum, argumentCountMaximum);
             ArgumentCountMaximum = argumentCountMaximum;
             Content = content ?? throw new ArgumentNullException(nameof(content));
             Converter = converter ?? throw new ArgumentNullException(nameof(converter));
+            ContentDifferentiate=contentDifferentiate;
         }
 
         public bool CanEvaluate(int argCount)
         {
             return ArgumentCountMinimum <= argCount && argCount <= ArgumentCountMaximum;
+        }
+
+        public IExpression Discreate(params IExpression[] expressions)
+        {
+            return ContentDifferentiate?.Invoke(expressions) ?? null;
         }
 
         public IExpression Evaluate(Environment environment, params IExpression[] expressions)

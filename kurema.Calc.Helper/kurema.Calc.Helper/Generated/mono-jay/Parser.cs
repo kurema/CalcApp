@@ -296,145 +296,145 @@ namespace kurema.Calc.Helper.Interpreter
         yyVal = yyV > yyTop ? null : yyVals[yyV]; // yyVal = yyDefault(yyV > yyTop ? null : yyVals[yyV]);
         switch (yyN) {
 case 2:
-#line 52 "Parser.jay"
+#line 55 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 3:
-#line 56 "Parser.jay"
+#line 59 "Parser.jay"
   {
     yyVal = new ArgumentExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 4:
-#line 62 "Parser.jay"
+#line 65 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 5:
-#line 66 "Parser.jay"
+#line 69 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 6:
-#line 70 "Parser.jay"
+#line 73 "Parser.jay"
   {
     yyVal = new OpSubExpression( new NumberExpression(new NumberDecimal(0)), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 7:
-#line 74 "Parser.jay"
+#line 77 "Parser.jay"
   {
     yyVal = new OpAddExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 8:
-#line 78 "Parser.jay"
+#line 81 "Parser.jay"
   {
     yyVal = new OpSubExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 9:
-#line 84 "Parser.jay"
+#line 87 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 10:
-#line 88 "Parser.jay"
+#line 91 "Parser.jay"
   {
     yyVal = new OpMulExpression(((IExpression)yyVals[-1+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 11:
-#line 92 "Parser.jay"
+#line 95 "Parser.jay"
   {
     yyVal = new OpMulExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 12:
-#line 96 "Parser.jay"
+#line 99 "Parser.jay"
   {
     yyVal = new OpDivExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 13:
-#line 102 "Parser.jay"
+#line 105 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 14:
-#line 106 "Parser.jay"
+#line 109 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 15:
-#line 110 "Parser.jay"
+#line 113 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 16:
-#line 116 "Parser.jay"
+#line 119 "Parser.jay"
   {
     yyVal = new OpPowExpression(((IExpression)yyVals[-2+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 17:
-#line 120 "Parser.jay"
+#line 123 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[0+yyTop]);
   }
   break;
 case 18:
-#line 124 "Parser.jay"
+#line 127 "Parser.jay"
   {
     yyVal = new OpFactorialExpression(((IExpression)yyVals[-1+yyTop]));
   }
   break;
 case 19:
-#line 130 "Parser.jay"
+#line 133 "Parser.jay"
   {
     yyVal = new NumberExpression(new NumberDecimal(((string)yyVals[0+yyTop])));
   }
   break;
 case 20:
-#line 134 "Parser.jay"
+#line 137 "Parser.jay"
   {
     yyVal = ((IExpression)yyVals[-1+yyTop]);
   }
   break;
 case 21:
-#line 140 "Parser.jay"
+#line 143 "Parser.jay"
   {
     yyVal = new VariableExpression(((string)yyVals[0+yyTop]));
   }
   break;
 case 22:
-#line 146 "Parser.jay"
+#line 149 "Parser.jay"
   {
     yyVal = new FuncExpression(((string)yyVals[-3+yyTop]), ((IExpression)yyVals[-1+yyTop]));
   }
   break;
 case 23:
-#line 150 "Parser.jay"
+#line 153 "Parser.jay"
   {
     yyVal = new FuncExpression(((string)yyVals[-1+yyTop]), new NumberExpression(new NumberDecimal(((string)yyVals[0+yyTop]))));
   }
   break;
 case 24:
-#line 154 "Parser.jay"
+#line 157 "Parser.jay"
   {
     yyVal = new FuncExpression(((string)yyVals[-1+yyTop]), ((IExpression)yyVals[0+yyTop]));
   }
   break;
 case 25:
-#line 158 "Parser.jay"
+#line 161 "Parser.jay"
   {
     yyVal = new FuncExpression(((string)yyVals[-2+yyTop]), null);
   }
@@ -576,7 +576,7 @@ case 25:
    -1,   -1,  266,
   };
 
-#line 160 "Parser.jay"
+#line 163 "Parser.jay"
 
 }
 #line default

@@ -16,5 +16,7 @@ namespace kurema.Calc.Helper.Expressions
         IExpression MemberSelect(Func<IExpression, IExpression> func);
 
         bool IsZero { get; }
+
+        //IExpression Differentiate(Environment.Environment environment, VariableExpression variable);
     }
 }

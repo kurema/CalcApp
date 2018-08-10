@@ -37,6 +37,9 @@ namespace kurema.Calc.Helper.Interpreter
 %left LP RP
 %left OP_ADD OP_SUB
 %left OP_MUL OP_DIV
+%left COMMA
+
+%right OP_POW
 
 %start Sentence
 

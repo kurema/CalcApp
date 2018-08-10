@@ -98,5 +98,10 @@ namespace kurema.Calc.Helper.Expressions
         {
             return MemberSelect(a => a.Expand());
         }
+
+        //public IExpression Differentiate(Environment.Environment environment, VariableExpression variable)
+        //{
+        //    return MemberSelect(a => a.Differentiate(environment, variable));
+        //}
     }
 }

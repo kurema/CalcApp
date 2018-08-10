@@ -28,17 +28,22 @@ namespace kurema.Calc.Helper.Expressions
 
         public IExpression Format(Environment.Environment environment)
         {
+            return GetExpression(environment, (args) => new FuncExpression(this.Name, args));
+        }
+
+        public IExpression GetExpression(Environment.Environment environment, Func<ArgumentExpression, IExpression> func = null)
+        {
             ArgumentExpression args = this.Argument.Format(environment);
             var f = environment.GetFunction(Name);
             if (f != null && args != null && f.CanEvaluate(args.Arguments.Length))
             {
                 var result = f.Evaluate(environment, args.Arguments)?.Format(environment);
-                if (result == null) return new FuncExpression(this.Name, args);
+                if (result == null) return func?.Invoke(args);
                 else return result;
             }
             else
             {
-                return new FuncExpression(this.Name, args);
+                return func?.Invoke(args);
             }
         }
 
@@ -66,5 +71,11 @@ namespace kurema.Calc.Helper.Expressions
         {
             return MemberSelect(a => a.Format());
         }
+
+        //public IExpression Differentiate(Environment.Environment environment, VariableExpression variable)
+        //{
+        //    var exp = GetExpression(environment);
+        //    exp.
+        //}
     }
 }
